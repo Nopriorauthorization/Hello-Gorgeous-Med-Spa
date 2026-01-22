@@ -24,6 +24,8 @@
   "devDependencies": {
     "eslint": "latest",
     "eslint-config-next": "latest",
-    "typescript": "latest"
+    "typescript": "latest",
+    "@types/react": "^18.2.21",
+    "@types/node": "^20.4.2"
   }
 }
