@@ -1,7 +1,7 @@
 import React from 'react'
 import services from '../../../data/services.json'
 import { Metadata } from 'next'
-import { generateServiceMetadata } from '@/lib/seo'
+import { generateServiceMetadata } from '../../../lib/seo'
 
 type Service = {
   slug: string

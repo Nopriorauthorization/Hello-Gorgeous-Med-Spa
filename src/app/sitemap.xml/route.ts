@@ -1,4 +1,4 @@
-import services from '../../../data/services.json'
+import services from '../../data/services.json'
 
 function urlEntry(loc: string, priority = 0.8, changefreq = 'weekly') {
   return `  <url>

@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800">
+  <rect width="1200" height="800" fill="#ffffff"/>
+  <rect x="40" y="40" width="1120" height="120" rx="8" fill="#fff" stroke="#E6E6E6" />
+  <text x="60" y="95" font-size="28" font-family="Playfair Display, serif" fill="#111827">Hello Gorgeous Med Spa</text>
+  <rect x="60" y="180" width="540" height="360" rx="12" fill="#F3F4F6" />
+  <rect x="620" y="180" width="520" height="160" rx="12" fill="#F9FAFB" />
+  <text x="620" y="210" font-size="20" font-family="Inter, sans-serif" fill="#111827">Hero headline</text>
+  <text x="620" y="240" font-size="14" font-family="Inter, sans-serif" fill="#6B7280">Subheading and CTA placeholders</text>
+  <g transform="translate(60,560)">
+    <rect width="320" height="180" rx="12" fill="#fff" stroke="#E5E7EB" />
+    <rect x="340" width="320" height="180" rx="12" fill="#fff" stroke="#E5E7EB" />
+    <rect x="680" width="320" height="180" rx="12" fill="#fff" stroke="#E5E7EB" />
+  </g>
+</svg>

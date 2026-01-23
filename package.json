@@ -32,5 +32,6 @@
     "postcss": "latest",
     "autoprefixer": "latest"
     ,"@tailwindcss/postcss": "latest"
+    ,"@tailwindcss/typography": "latest"
   }
 }

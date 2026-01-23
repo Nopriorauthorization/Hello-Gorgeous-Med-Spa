@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="375" height="812" viewBox="0 0 375 812">
+  <rect width="375" height="812" fill="#ffffff"/>
+  <text x="20" y="48" font-size="20" font-family="Playfair Display, serif" fill="#111827">Hello Gorgeous Med Spa</text>
+  <rect x="16" y="80" width="343" height="180" rx="12" fill="#F3F4F6" />
+  <text x="20" y="280" font-size="18" font-family="Inter, sans-serif" fill="#111827">Hero headline</text>
+  <rect x="16" y="320" width="343" height="120" rx="12" fill="#fff" stroke="#E5E7EB" />
+  <g transform="translate(16,460)">
+    <rect width="343" height="120" rx="12" fill="#fff" stroke="#E5E7EB" />
+  </g>
+</svg>

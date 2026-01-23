@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="375" height="812" viewBox="0 0 375 812">
+  <rect width="375" height="812" fill="#ffffff"/>
+  <text x="20" y="48" font-size="20" font-family="Playfair Display, serif" fill="#111827">Services</text>
+  <g transform="translate(16,80)">
+    <rect width="343" height="120" rx="12" fill="#F3F4F6" />
+    <rect y="140" width="343" height="120" rx="12" fill="#F3F4F6" />
+  </g>
+</svg>

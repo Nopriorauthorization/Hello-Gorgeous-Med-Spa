@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800">
+  <rect width="1200" height="800" fill="#ffffff"/>
+  <text x="60" y="80" font-size="28" font-family="Playfair Display, serif" fill="#111827">Services</text>
+  <g transform="translate(60,120)">
+    <rect width="320" height="220" rx="12" fill="#F3F4F6" />
+    <rect x="360" width="320" height="220" rx="12" fill="#F3F4F6" />
+    <rect x="720" width="320" height="220" rx="12" fill="#F3F4F6" />
+  </g>
+  <g transform="translate(60,360)">
+    <rect width="320" height="220" rx="12" fill="#fff" stroke="#E5E7EB" />
+  </g>
+</svg>
