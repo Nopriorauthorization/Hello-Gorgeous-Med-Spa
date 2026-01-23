@@ -1,0 +1,57 @@
+/* Design system tokens */
+:root {
+  /* Layout */
+  --container-max: 1200px;
+
+  /* Fonts */
+  --font-heading: 'Playfair Display', serif;
+  --font-body: 'Source Sans Pro', ui-sans-serif, system-ui;
+
+  /* Brand colors (mirrors tailwind config) */
+  --color-brand: #E63E7A;
+  --color-brand-50: #FFEAF3;
+  --color-brand-100: #FFD5E8;
+  --color-brand-200: #FF8FBB;
+  --color-brand-300: #FF6F9F;
+  --color-brand-400: #E63E7A;
+  --color-brand-500: #C01E64;
+  --color-brand-600: #9A154F;
+  --color-brand-700: #73103A;
+  --color-brand-800: #4C0A25;
+
+  /* Neutral scale */
+  --neutral-50: #F9FAFB;
+  --neutral-100: #F3F4F6;
+  --neutral-200: #E5E7EB;
+  --neutral-300: #D1D5DB;
+  --neutral-400: #9CA3AF;
+  --neutral-500: #6B7280;
+  --neutral-600: #4B5563;
+  --neutral-700: #374151;
+  --neutral-800: #1F2937;
+  --neutral-900: #111827;
+
+  /* Accents */
+  --accent-teal: #0EA5A4;
+  --accent-gold: #D4AF37;
+
+  /* Spacing */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+
+  /* Radii & motion */
+  --radius-sm: 6px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+  --motion-200: 200ms;
+  --motion-400: 400ms;
+}
+
+/* Small helper classes to keep tokens usable without JS */
+.ds-container { max-width: var(--container-max); margin-left: auto; margin-right: auto; padding-left: 1rem; padding-right: 1rem; }
+.ds-hero-contrast { background: linear-gradient(180deg, rgba(0,0,0,0.35), rgba(0,0,0,0.25)); }
+.ds-card { background: white; border-radius: var(--radius-md); box-shadow: 0 8px 30px rgba(17,24,39,0.06); }

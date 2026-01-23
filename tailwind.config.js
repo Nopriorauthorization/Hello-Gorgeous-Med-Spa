@@ -39,11 +39,20 @@ module.exports = {
       },
       fontFamily: {
         heading: ['Playfair Display', 'serif'],
-        body: ['Inter', 'ui-sans-serif', 'system-ui']
+        body: ['Source Sans Pro', 'ui-sans-serif', 'system-ui']
       },
       spacing: {
         '9': '2.25rem',
         '72': '18rem'
+      },
+      borderRadius: {
+        sm: '6px',
+        md: '12px',
+        lg: '20px'
+      },
+      transitionDuration: {
+        200: '200ms',
+        400: '400ms'
       }
     },
   },

@@ -2,25 +2,12 @@ import React from 'react'
 import Button from '../components/Button'
 import Card from '../components/Card'
 import Section from '../components/Section'
+import Hero from '../components/Hero'
 
 export default function Home() {
   return (
     <>
-      <Section id="hero">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
-          <div>
-            <h2 className="text-4xl md:text-5xl font-heading font-semibold leading-tight">Modern medical aesthetics, thoughtful care.</h2>
-            <p className="text-lg text-neutral-600 mt-4">A fast, SEO-friendly platform built for conversions and long-term growth.</p>
-            <div className="mt-6 flex gap-4">
-              <Button>Book Now</Button>
-              <Button variant="ghost">Learn More</Button>
-            </div>
-          </div>
-          <div>
-            <div className="h-72 bg-neutral-100 rounded-lg flex items-center justify-center">Hero image / video placeholder</div>
-          </div>
-        </div>
-      </Section>
+      <Hero />
 
       <Section id="services" className="bg-neutral-50">
         <h3 className="text-2xl font-semibold mb-6">Services Overview</h3>
