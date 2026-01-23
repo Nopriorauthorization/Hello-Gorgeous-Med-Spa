@@ -1,0 +1,31 @@
+{
+  "entryPaths": [
+    { "id": "new", "title": "I'm new", "description": "I want guidance and to learn what to try first." },
+    { "id": "know", "title": "I know what I want", "description": "I already have a treatment in mind." },
+    { "id": "recommend", "title": "I want recommendations", "description": "Suggest options based on my goals." },
+    { "id": "results", "title": "I'm here for results", "description": "Show proven treatments and before/after." }
+  ],
+  "serviceCategories": [
+    {
+      "id": "injectables",
+      "title": "Injectables",
+      "slug": "injectables",
+      "short": "Botox, neuromodulators, and dermal fillers",
+      "tags": ["botox","fillers","cosmetic"]
+    },
+    {
+      "id": "wellness",
+      "title": "Wellness",
+      "slug": "wellness",
+      "short": "Hormone therapy, weight loss, peptides",
+      "tags": ["hormone","weight-loss","peptides"]
+    },
+    {
+      "id": "skin",
+      "title": "Skin Treatments",
+      "slug": "skin",
+      "short": "Microneedling, PRP, lasers and facials",
+      "tags": ["microneedling","laser","skin-care"]
+    }
+  ]
+}

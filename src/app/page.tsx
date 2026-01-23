@@ -3,11 +3,16 @@ import Button from '../components/Button'
 import Card from '../components/Card'
 import Section from '../components/Section'
 import Hero from '../components/Hero'
+import HomeInteractive from '../components/home/HomeInteractive'
 
 export default function Home() {
   return (
     <>
       <Hero />
+
+      <div className="mt-12">
+        <HomeInteractive />
+      </div>
 
       <Section id="services" className="bg-neutral-50">
         <h3 className="text-2xl font-semibold mb-6">Services Overview</h3>
