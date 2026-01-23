@@ -41,6 +41,11 @@ module.exports = {
         heading: ['Playfair Display', 'serif'],
         body: ['Source Sans Pro', 'ui-sans-serif', 'system-ui']
       },
+      fontSize: {
+        'display-1': ['3rem', { lineHeight: '1.02', fontWeight: '800' }],
+        'display-2': ['2.25rem', { lineHeight: '1.04', fontWeight: '700' }],
+        'display-3': ['1.875rem', { lineHeight: '1.06', fontWeight: '700' }]
+      },
       spacing: {
         '9': '2.25rem',
         '72': '18rem'

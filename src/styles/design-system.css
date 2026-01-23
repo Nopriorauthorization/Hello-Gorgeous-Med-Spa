@@ -34,6 +34,18 @@
   /* Accents */
   --accent-teal: #0EA5A4;
   --accent-gold: #D4AF37;
+  /* Brand hot pink */
+  --brand-pink: #E63E7A;
+
+  /* Depth & shadows */
+  --shadow-sm: 0 6px 18px rgba(17,24,39,0.06);
+  --shadow-md: 0 12px 40px rgba(17,24,39,0.12);
+  --glow-pink: 0 8px 34px rgba(230,62,122,0.12);
+
+  /* Display scale */
+  --display-1: 3rem; /* 48px */
+  --display-2: 2.25rem; /* 36px */
+  --display-3: 1.875rem; /* 30px */
 
   /* Spacing */
   --space-1: 0.25rem;
@@ -54,4 +66,14 @@
 /* Small helper classes to keep tokens usable without JS */
 .ds-container { max-width: var(--container-max); margin-left: auto; margin-right: auto; padding-left: 1rem; padding-right: 1rem; }
 .ds-hero-contrast { background: linear-gradient(180deg, rgba(0,0,0,0.35), rgba(0,0,0,0.25)); }
-.ds-card { background: white; border-radius: var(--radius-md); box-shadow: 0 8px 30px rgba(17,24,39,0.06); }
+.ds-card { background: white; border-radius: var(--radius-md); box-shadow: var(--shadow-sm); transition: transform var(--motion-200), box-shadow var(--motion-200); }
+.ds-card:hover { transform: translateY(-6px); box-shadow: var(--shadow-md); }
+
+.hero-full-bleed { position: relative; width: 100%; min-height: 78vh; overflow: hidden; }
+.hero-bg { position: absolute; inset: 0; background-size: cover; background-position: center; filter: saturate(0.95) contrast(1.02); }
+.hero-overlay { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.35) 35%, rgba(0,0,0,0.15) 65%, rgba(0,0,0,0)); }
+.hero-cta-primary { background: var(--brand-pink); color: white; border-radius: 9999px; padding: 0.75rem 1.25rem; box-shadow: var(--glow-pink); }
+.hero-cta-secondary { border: 1px solid rgba(255,255,255,0.18); color: white; border-radius: 9999px; padding: 0.75rem 1.25rem; }
+
+.accent-pink { color: var(--brand-pink); }
+
