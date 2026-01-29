@@ -1,12 +1,19 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Base styles */
 html, body {
     margin: 0;
     padding: 0;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     line-height: 1.6;
+    background-color: #000;
+    color: #fff;
 }
 
-h1, h2, h3, h4, h5, h6 {
-    margin: 0;
+* {
+    box-sizing: border-box;
 }
 
 a {
@@ -14,248 +21,67 @@ a {
     color: inherit;
 }
 
-.container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 20px;
+/* Gradient text utility */
+.gradient-text {
+    background: linear-gradient(135deg, #ec4899 0%, #f97316 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
 }
 
-.header {
-    background-color: #f8f9fa;
-    padding: 20px 0;
+/* Card hover effects */
+.card-hover {
+    transition: all 0.3s ease;
 }
 
-.footer {
-    background-color: #f8f9fa;
-    padding: 20px 0;
-    text-align: center;
+.card-hover:hover {
+    transform: translateY(-4px);
+    border-color: rgba(236, 72, 153, 0.3);
 }
 
-/* ===== Meet Your Care Team Page ===== */
-.experts-page {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 40px 20px;
+/* Button gradient */
+.btn-gradient {
+    background: linear-gradient(135deg, #ec4899 0%, #a855f7 100%);
 }
 
-.experts-header {
-    text-align: center;
-    margin-bottom: 50px;
+.btn-gradient:hover {
+    background: linear-gradient(135deg, #db2777 0%, #9333ea 100%);
 }
 
-.experts-header h1 {
-    font-size: 2.5rem;
-    color: #2d3748;
-    margin-bottom: 10px;
-}
-
-.experts-header p {
-    color: #718096;
-    font-size: 1.1rem;
-}
-
-.experts-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-    gap: 30px;
-    margin-bottom: 40px;
-}
-
-/* ===== Care Team Chat Box Styles ===== */
-.expert-chat-box {
-    background: #ffffff;
-    border-radius: 20px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+/* Video container */
+.video-wrapper {
+    position: relative;
+    aspect-ratio: 16 / 9;
+    background: #1f2937;
+    border-radius: 0.5rem;
     overflow: hidden;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
-.expert-chat-box:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+/* Loading spinner */
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
 }
 
-.chat-header {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    padding: 20px;
-    display: flex;
-    align-items: center;
-    gap: 15px;
+.spinner {
+    animation: spin 1s linear infinite;
 }
 
-.expert-avatar {
-    width: 50px;
-    height: 50px;
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    font-weight: bold;
-    font-size: 1.1rem;
-}
-
-.expert-info {
-    flex: 1;
-}
-
-.expert-info h3 {
-    color: white;
-    font-size: 1.1rem;
-    margin-bottom: 2px;
-}
-
-.expert-title {
-    color: rgba(255, 255, 255, 0.8);
-    font-size: 0.85rem;
-    display: block;
-}
-
-.expert-credentials {
-    color: rgba(255, 255, 255, 0.6);
-    font-size: 0.75rem;
-    display: block;
-    margin-top: 2px;
-}
-
-.online-status {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    color: white;
-    font-size: 0.8rem;
-}
-
-.status-dot {
+/* Custom scrollbar for dark theme */
+::-webkit-scrollbar {
     width: 8px;
-    height: 8px;
-    background: #68d391;
-    border-radius: 50%;
-    animation: pulse 2s infinite;
 }
 
-@keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.5; }
+::-webkit-scrollbar-track {
+    background: #1f2937;
 }
 
-.chat-content {
-    padding: 20px;
-    background: #f7fafc;
-    min-height: 200px;
+::-webkit-scrollbar-thumb {
+    background: #4b5563;
+    border-radius: 4px;
 }
 
-.message-bubble {
-    background: white;
-    padding: 15px 20px;
-    border-radius: 18px;
-    border-bottom-left-radius: 4px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-    margin-bottom: 15px;
-}
-
-.message-bubble p {
-    margin: 0 0 10px 0;
-    color: #4a5568;
-    font-size: 0.95rem;
-}
-
-.message-bubble p:last-child {
-    margin-bottom: 0;
-}
-
-.video-section {
-    margin-top: 15px;
-}
-
-.video-trigger {
-    width: 100%;
-    padding: 15px 20px;
-    background: linear-gradient(135deg, #ed64a6 0%, #d53f8c 100%);
-    color: white;
-    border: none;
-    border-radius: 12px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    font-size: 1rem;
-    font-weight: 500;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.video-trigger:hover {
-    transform: scale(1.02);
-    box-shadow: 0 4px 15px rgba(213, 63, 140, 0.4);
-}
-
-.play-icon {
-    font-size: 1.2rem;
-}
-
-.video-container {
-    border-radius: 12px;
-    overflow: hidden;
-    background: #000;
-}
-
-.video-container video {
-    display: block;
-    border-radius: 12px 12px 0 0;
-}
-
-.close-video {
-    width: 100%;
-    padding: 10px;
-    background: #4a5568;
-    color: white;
-    border: none;
-    cursor: pointer;
-    font-size: 0.9rem;
-    transition: background 0.2s ease;
-}
-
-.close-video:hover {
-    background: #2d3748;
-}
-
-.chat-footer {
-    padding: 15px 20px;
-    border-top: 1px solid #e2e8f0;
-}
-
-.book-btn {
-    display: block;
-    width: 100%;
-    padding: 12px 20px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    border: none;
-    border-radius: 10px;
-    cursor: pointer;
-    font-size: 1rem;
-    font-weight: 600;
-    text-align: center;
-    text-decoration: none;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-    box-sizing: border-box;
-}
-
-.book-btn:hover {
-    transform: scale(1.02);
-    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
-    color: white;
-}
-
-/* Responsive adjustments */
-@media (max-width: 768px) {
-    .experts-grid {
-        grid-template-columns: 1fr;
-    }
-    
-    .experts-header h1 {
-        font-size: 2rem;
-    }
+::-webkit-scrollbar-thumb:hover {
+    background: #6b7280;
 }
