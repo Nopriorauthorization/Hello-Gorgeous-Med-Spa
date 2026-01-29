@@ -3,6 +3,7 @@ import Link from "next/link";
 
 import { FadeUp, Section } from "@/components/Section";
 import { CTA } from "@/components/CTA";
+import { BOOKING_URL } from "@/lib/flows";
 import { faqJsonLd, pageMetadata, siteJsonLd } from "@/lib/seo";
 
 const locations = [
@@ -83,11 +84,11 @@ export default function LocationsPage() {
               clinical aesthetics.
             </p>
             <div className="mt-10 flex flex-col sm:flex-row gap-4">
-              <CTA href="/book" variant="gradient">
+              <CTA href={BOOKING_URL} variant="gradient">
                 Book a Consultation
               </CTA>
               <CTA href="/meet-the-team" variant="outline">
-                Meet the Experts
+                Meet Your Care Team
               </CTA>
             </div>
           </FadeUp>

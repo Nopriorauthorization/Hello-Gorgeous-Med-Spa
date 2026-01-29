@@ -4,6 +4,7 @@ import Link from "next/link";
 import { CTA } from "@/components/CTA";
 import { FadeUp, Section } from "@/components/Section";
 import { ServiceExpertWidget } from "@/components/ServiceExpertWidget";
+import { BOOKING_URL } from "@/lib/flows";
 import { SERVICES, faqJsonLd, pageMetadata, siteJsonLd } from "@/lib/seo";
 
 const topOswegoSlugs = [
@@ -78,7 +79,7 @@ export default function OswegoHubPage() {
               can feel confident in your plan, your outcomes, and your safety.
             </p>
             <div className="mt-10 flex flex-col sm:flex-row gap-4">
-              <CTA href="/book" variant="gradient">
+              <CTA href={BOOKING_URL} variant="gradient">
                 Book a Consultation
               </CTA>
               <CTA href="/meet-the-team" variant="outline">

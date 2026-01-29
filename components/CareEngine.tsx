@@ -240,7 +240,7 @@ export function CareEngine() {
               Education only · No diagnosis · No prescriptions · Book a consult for personal medical advice
             </p>
           </div>
-          <CTA href="/book" variant="gradient" className="px-4 py-2 rounded-lg text-sm">
+          <CTA href={BOOKING_URL} variant="gradient" className="px-4 py-2 rounded-lg text-sm">
             Book Now
           </CTA>
         </div>

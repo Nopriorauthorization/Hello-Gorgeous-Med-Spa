@@ -7,6 +7,7 @@ import { DEFAULT_PERSONA_ID, PERSONA_CONFIGS, getPersonaConfig } from "@/lib/per
 import { PERSONA_UI } from "@/lib/personas/ui";
 import { CTA } from "@/components/CTA";
 import { FadeUp } from "@/components/Section";
+import { BOOKING_URL } from "@/lib/flows";
 
 type Msg = { role: "user" | "assistant"; content: string };
 
@@ -311,7 +312,7 @@ export function PersonaHub() {
               </div>
 
               <div className="mt-4 flex flex-col gap-3">
-                <CTA href="/book" variant="white" className="w-full">
+                <CTA href={BOOKING_URL} variant="white" className="w-full">
                   Book a Consultation
                 </CTA>
                 <p className="text-xs text-white/60">

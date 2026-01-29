@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { FadeUp, Section } from "@/components/Section";
 import { CTA } from "@/components/CTA";
 import { ServiceExpertWidget } from "@/components/ServiceExpertWidget";
+import { BOOKING_URL } from "@/lib/flows";
 import { SERVICES, faqJsonLd, pageMetadata, siteJsonLd } from "@/lib/seo";
 import {
   ATLAS_CLUSTERS,
@@ -84,7 +85,7 @@ function CategoryPage({ categoryId }: { categoryId: ServiceAtlasClusterId }) {
               <CTA href="/care-engine" variant="outline">
                 Open the Care Engine™
               </CTA>
-              <CTA href="/book" variant="gradient">
+              <CTA href={BOOKING_URL} variant="gradient">
                 Book when ready (optional)
               </CTA>
             </div>
@@ -195,7 +196,7 @@ function ServiceDetailPage({ serviceSlug }: { serviceSlug: string }) {
             </h1>
             <p className="mt-6 text-xl text-gray-300 max-w-3xl leading-relaxed">{s.heroSubtitle}</p>
             <div className="mt-10 flex flex-col sm:flex-row gap-4">
-              <CTA href="/book" variant="gradient">
+              <CTA href={BOOKING_URL} variant="gradient">
                 Book when ready (optional)
               </CTA>
               <CTA href="/explore-care" variant="outline">
@@ -291,7 +292,7 @@ function ServiceDetailPage({ serviceSlug }: { serviceSlug: string }) {
                   Booking is optional. If you’re ready, book a consultation and we’ll build a safe, personalized plan.
                 </p>
                 <div className="mt-6 flex flex-col sm:flex-row gap-4">
-                  <CTA href="/book" variant="gradient">
+                  <CTA href={BOOKING_URL} variant="gradient">
                     Book when ready (optional)
                   </CTA>
                   <CTA href="/contact" variant="outline">
@@ -336,7 +337,7 @@ function ServiceDetailPage({ serviceSlug }: { serviceSlug: string }) {
         </div>
 
         <div className="mt-12 text-center">
-          <CTA href="/book" variant="white" className="group inline-flex">
+          <CTA href={BOOKING_URL} variant="white" className="group inline-flex">
             Book a Consultation
             <svg
               stroke="currentColor"

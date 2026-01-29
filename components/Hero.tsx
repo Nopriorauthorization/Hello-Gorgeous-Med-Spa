@@ -4,6 +4,7 @@ import React from "react";
 
 import { CTA } from "./CTA";
 import { FadeUp } from "./Section";
+import { BOOKING_URL } from "@/lib/flows";
 
 export function Hero() {
   return (
@@ -36,7 +37,7 @@ export function Hero() {
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-16">
-            <CTA href="/book" variant="gradient" className="group">
+            <CTA href={BOOKING_URL} variant="gradient" className="group">
               Book Now
               <svg
                 stroke="currentColor"
@@ -54,11 +55,11 @@ export function Hero() {
                 <polyline points="12 5 19 12 12 19" />
               </svg>
             </CTA>
-            <CTA href="/services" variant="outline">
-              See Services
+            <CTA href="/explore-care" variant="outline">
+              Explore Care
             </CTA>
             <CTA href="/meet-the-team" variant="outline">
-              Meet the Experts
+              Meet Your Care Team
             </CTA>
           </div>
 

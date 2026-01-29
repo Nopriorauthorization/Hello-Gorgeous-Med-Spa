@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 
 import { CTA } from "@/components/CTA";
 import { FadeUp, Section } from "@/components/Section";
+import { BOOKING_URL } from "@/lib/flows";
 import { pageMetadata, siteJsonLd } from "@/lib/seo";
 
 export const metadata: Metadata = pageMetadata({
@@ -38,7 +39,7 @@ export default function AboutPage() {
               premium standard of care.
             </p>
             <div className="mt-10 flex flex-col sm:flex-row gap-4">
-              <CTA href="/book" variant="gradient">
+              <CTA href={BOOKING_URL} variant="gradient">
                 Book a Consultation
               </CTA>
               <CTA href="/services" variant="outline">

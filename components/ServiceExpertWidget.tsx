@@ -6,6 +6,7 @@ import type { PersonaId } from "@/lib/personas/types";
 import { getPersonaConfig } from "@/lib/personas/index";
 import { PERSONA_UI } from "@/lib/personas/ui";
 import { CTA } from "@/components/CTA";
+import { BOOKING_URL } from "@/lib/flows";
 
 type Msg = { role: "user" | "assistant"; content: string };
 
@@ -224,7 +225,7 @@ export function ServiceExpertWidget({
         </div>
 
         <div className="mt-4">
-          <CTA href="/book" variant="white" className="w-full">
+          <CTA href={BOOKING_URL} variant="white" className="w-full">
             Book a Consultation
           </CTA>
         </div>

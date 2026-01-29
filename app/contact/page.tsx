@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 
 import { CTA } from "@/components/CTA";
 import { FadeUp, Section } from "@/components/Section";
+import { BOOKING_URL } from "@/lib/flows";
 import { SITE, pageMetadata, siteJsonLd } from "@/lib/seo";
 
 export const metadata: Metadata = pageMetadata({
@@ -57,7 +58,7 @@ export default function ContactPage() {
                 <span className="text-white font-semibold">Email:</span> {SITE.email}
               </p>
               <div className="mt-8 flex flex-col sm:flex-row gap-4">
-                <CTA href="/book" variant="gradient">
+                <CTA href={BOOKING_URL} variant="gradient">
                   Book Now
                 </CTA>
                 <CTA href="/services" variant="outline">

@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { CTA } from "@/components/CTA";
 import { FadeUp, Section } from "@/components/Section";
 import { ServiceExpertWidget } from "@/components/ServiceExpertWidget";
+import { BOOKING_URL } from "@/lib/flows";
 import { SERVICES, faqJsonLd, pageMetadata, siteJsonLd } from "@/lib/seo";
 
 const oswegoServiceSlugs = [
@@ -99,7 +100,7 @@ export default function OswegoServicePage({ params }: { params: { service: strin
               {s.heroSubtitle}
             </p>
             <div className="mt-10 flex flex-col sm:flex-row gap-4">
-              <CTA href="/book" variant="gradient">
+              <CTA href={BOOKING_URL} variant="gradient">
                 Book a Consultation
               </CTA>
               <CTA href={`/services/${s.slug}`} variant="outline">
@@ -205,7 +206,7 @@ export default function OswegoServicePage({ params }: { params: { service: strin
         </div>
 
         <div className="mt-12 text-center">
-          <CTA href="/book" variant="white" className="group inline-flex">
+          <CTA href={BOOKING_URL} variant="white" className="group inline-flex">
             Book in Oswego
             <svg
               stroke="currentColor"

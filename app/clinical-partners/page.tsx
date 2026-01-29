@@ -4,6 +4,7 @@ import Link from "next/link";
 
 import { CTA } from "@/components/CTA";
 import { FadeUp, Section } from "@/components/Section";
+import { BOOKING_URL } from "@/lib/flows";
 import { pageMetadata, siteJsonLd } from "@/lib/seo";
 
 export const metadata: Metadata = pageMetadata({
@@ -40,7 +41,7 @@ export default function ClinicalPartnersPage() {
               bragging—it’s about helping you feel safe, informed, and respected.
             </p>
             <div className="mt-10 flex flex-col sm:flex-row gap-4">
-              <CTA href="/book" variant="gradient">
+              <CTA href={BOOKING_URL} variant="gradient">
                 Book a Consultation (optional)
               </CTA>
               <CTA href="/your-journey" variant="outline">
