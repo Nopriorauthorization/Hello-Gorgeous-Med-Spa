@@ -1,9 +1,16 @@
-module.exports = {
+/** @type {import('next').NextConfig} */
+const nextConfig = {
   reactStrictMode: true,
   images: {
-    domains: ['example.com'], // Replace with your image domains
+    remotePatterns: [
+      // Add real CDNs/domains here as needed
+      { protocol: "https", hostname: "images.unsplash.com" },
+    ],
   },
-  env: {
-    CUSTOM_API_URL: process.env.CUSTOM_API_URL, // Example of an environment variable
-  },
+  redirects: async () => [
+    { source: "/book-now", destination: "/book", permanent: true },
+    { source: "/schedule", destination: "/book", permanent: true },
+  ],
 };
+
+module.exports = nextConfig;
