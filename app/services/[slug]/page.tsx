@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 
 import { FadeUp, Section } from "@/components/Section";
 import { CTA } from "@/components/CTA";
+import { ServiceExpertWidget } from "@/components/ServiceExpertWidget";
 import { SERVICES, faqJsonLd, pageMetadata, siteJsonLd } from "@/lib/seo";
 
 export function generateStaticParams() {
@@ -33,6 +34,35 @@ export function generateMetadata({
 export default function ServicePage({ params }: { params: { slug: string } }) {
   const s = SERVICES.find((x) => x.slug === params.slug);
   if (!s) notFound();
+
+  const quickFacts =
+    s.category === "Injectables"
+      ? [
+          { k: "Treatment time", v: "10–30 min" },
+          { k: "Downtime", v: "Minimal (possible swelling/bruising)" },
+          { k: "Results", v: "Days → 2 weeks" },
+          { k: "Maintenance", v: "Every 3–12 months (varies)" },
+        ]
+      : s.category === "Wellness"
+        ? [
+            { k: "First step", v: "Consult + screening" },
+            { k: "Monitoring", v: "Ongoing check-ins" },
+            { k: "Timeline", v: "Varies by plan" },
+            { k: "Goal", v: "Safe, sustainable progress" },
+          ]
+        : s.category === "Regenerative"
+          ? [
+              { k: "Approach", v: "Regenerative support" },
+              { k: "Downtime", v: "Varies by protocol" },
+              { k: "Results", v: "Gradual (weeks → months)" },
+              { k: "Plan", v: "Often a series" },
+            ]
+          : [
+              { k: "Plan", v: "Personalized series" },
+              { k: "Downtime", v: "Varies by treatment" },
+              { k: "Results", v: "Often progressive" },
+              { k: "Maintenance", v: "Ongoing options" },
+            ];
 
   return (
     <>
@@ -69,8 +99,26 @@ export default function ServicePage({ params }: { params: { slug: string } }) {
               <CTA href="/services" variant="outline">
                 Back to Services
               </CTA>
+              <CTA href="/meet-the-team" variant="outline">
+                Meet the Experts
+              </CTA>
             </div>
           </FadeUp>
+        </div>
+      </Section>
+
+      <Section>
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          {quickFacts.map((f, idx) => (
+            <FadeUp key={f.k} delayMs={40 * idx}>
+              <div className="rounded-2xl border border-gray-800 bg-gradient-to-b from-gray-950/60 to-black p-5">
+                <p className="text-xs font-semibold tracking-wide text-white/70 uppercase">
+                  {f.k}
+                </p>
+                <p className="mt-2 text-lg font-bold text-white">{f.v}</p>
+              </div>
+            </FadeUp>
+          ))}
         </div>
       </Section>
 
@@ -79,12 +127,12 @@ export default function ServicePage({ params }: { params: { slug: string } }) {
           {[
             { title: "What it is", body: s.short },
             {
-              title: "What to expect",
-              body: "A consult-first approach, personalized recommendations, and a clear plan for results and maintenance.",
+              title: "Who it’s for",
+              body: "People who want a professional, results-driven plan with clear expectations and a luxury experience.",
             },
             {
-              title: "Local care",
-              body: "Conveniently located for clients in Oswego, Naperville, Aurora, and Plainfield.",
+              title: "What to expect",
+              body: "Consult-first approach, personalized recommendations, and a clear plan for results + maintenance.",
             },
           ].map((c, idx) => (
             <FadeUp key={c.title} delayMs={60 * idx}>
@@ -94,6 +142,72 @@ export default function ServicePage({ params }: { params: { slug: string } }) {
               </div>
             </FadeUp>
           ))}
+        </div>
+      </Section>
+
+      <Section>
+        <div className="grid gap-8 lg:grid-cols-12">
+          <div className="lg:col-span-7">
+            <FadeUp>
+              <h2 className="text-3xl md:text-4xl font-bold text-white">
+                A premium plan,{" "}
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-pink-400 to-purple-400">
+                  not a generic appointment
+                </span>
+              </h2>
+              <p className="mt-4 text-gray-300 max-w-2xl">
+                The goal is a confident “yes” with a clear plan—timing, expectations, and safety
+                built in.
+              </p>
+            </FadeUp>
+
+            <div className="mt-10 grid gap-4">
+              {[
+                {
+                  t: "Benefits",
+                  b: "Natural-looking results, clear expectations, and a plan designed around your goals and timeline.",
+                },
+                {
+                  t: "Safety-first",
+                  b: "We screen, educate, and personalize—no diagnosis or medical advice on the website. Consult required for individualized recommendations.",
+                },
+                {
+                  t: "Local expertise",
+                  b: "Serving Oswego, Naperville, Aurora, and Plainfield with a luxury, clinical-meets-beauty experience.",
+                },
+              ].map((x, idx) => (
+                <FadeUp key={x.t} delayMs={40 * idx}>
+                  <div className="rounded-2xl border border-gray-800 bg-black/40 p-6">
+                    <h3 className="text-xl font-bold text-white">{x.t}</h3>
+                    <p className="mt-3 text-gray-300">{x.b}</p>
+                  </div>
+                </FadeUp>
+              ))}
+            </div>
+
+            <FadeUp delayMs={160}>
+              <div className="mt-10 rounded-2xl border border-gray-800 bg-gradient-to-b from-gray-950/60 to-black p-6">
+                <h3 className="text-xl font-bold text-white">Ready to book?</h3>
+                <p className="mt-3 text-gray-300">
+                  Book a consultation and we’ll build a safe, personalized plan.
+                </p>
+                <div className="mt-6 flex flex-col sm:flex-row gap-4">
+                  <CTA href="/book" variant="gradient">
+                    Book Now
+                  </CTA>
+                  <CTA href="/contact" variant="outline">
+                    Ask a question first
+                  </CTA>
+                </div>
+              </div>
+            </FadeUp>
+          </div>
+
+          <div className="lg:col-span-5">
+            <FadeUp delayMs={120}>
+              <ServiceExpertWidget serviceName={s.name} slug={s.slug} category={s.category} />
+            </FadeUp>
+          </div>
         </div>
       </Section>
 
