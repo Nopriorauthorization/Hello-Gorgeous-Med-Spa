@@ -7,7 +7,31 @@ import type { PersonaId } from "@/lib/personas/types";
 import { DEFAULT_PERSONA_ID, PERSONA_CONFIGS } from "@/lib/personas/index";
 import { PERSONA_UI } from "@/lib/personas/ui";
 import { BOOKING_URL, PRECONSULT_DEFAULTS, type CareModuleId, type PreConsultAnswer, suggestPersonaForServiceSlug, suggestServiceSlugsFromPreConsult } from "@/lib/flows";
-import { complianceFooter } from "@/lib/guardrails";
+import { complianceFooter, postTreatmentRedFlags, ryanSafetyOverrideReply } from "@/lib/guardrails";
+import {
+  CARE_EXPERIENCE_ENABLED,
+  CONFIDENCE_CHECK_QUESTIONS,
+  buildConfidenceSummary,
+  ASK_BEFORE_BOOK_SUGGESTIONS,
+  ASK_CATEGORIES,
+  suggestPersonaForQuestion,
+  TREATMENT_OPTIONS,
+  TIMELINE_OPTIONS,
+  SYMPTOM_OPTIONS,
+  normalCheck,
+  getTimelineScenario,
+  TIMELINE_SCENARIOS,
+  type AskCategory,
+  type TimelineStepId,
+  BEAUTY_PRIORITIES,
+  buildBeautyRoadmap,
+  type ConfidenceCheckAnswer,
+  type TreatmentType,
+  type TimelineBucket,
+  type SymptomId,
+  type TimelineTreatment,
+  type BeautyPriority,
+} from "@/lib/care-modules";
 
 type Msg = { role: "user" | "assistant"; content: string };
 
@@ -29,6 +53,16 @@ function moduleLabel(m: CareModuleId) {
       return "Booking";
     case "postcare":
       return "Post‑Treatment";
+    case "confidence-check":
+      return "Confidence Check™";
+    case "ask-before-book":
+      return "Ask‑Before‑You‑Book™";
+    case "normal-checker":
+      return "“Is this normal?”™";
+    case "timeline-simulator":
+      return "Timeline Simulator™";
+    case "beauty-roadmap":
+      return "Beauty Roadmap™";
   }
 }
 
@@ -39,6 +73,16 @@ function starterMessage(personaId: PersonaId, module: CareModuleId): Msg {
       ? "Ask anything and I’ll explain what to expect."
       : module === "postcare"
         ? "Tell me what you’re experiencing and I’ll explain what’s typical vs when to contact a provider."
+        : module === "ask-before-book"
+          ? "Ask a question before you book and I’ll answer in the right expert voice."
+          : module === "timeline-simulator"
+            ? "Pick a timeline and I’ll help you set expectations."
+            : module === "confidence-check"
+              ? "Answer a few short questions to get clarity before booking."
+              : module === "beauty-roadmap"
+                ? "Build a long‑term, education-first roadmap (conceptual only)."
+                : module === "normal-checker"
+                  ? "Select what you’re experiencing for calm, educational guidance."
         : "Ask a question.";
 
   return {
@@ -82,12 +126,52 @@ export function CareEngine() {
   const [preSummary, setPreSummary] = React.useState<string | null>(null);
   const [preSuggested, setPreSuggested] = React.useState<string[]>([]);
 
+  // Interactive Care Experience™ state
+  const [cc, setCc] = React.useState<ConfidenceCheckAnswer>({
+    bother: "",
+    changeStyle: "unsure",
+    firstTime: "unsure",
+    timeframe: "just-researching",
+    downtimeComfort: "unsure",
+    decisionStyle: "i-need-guidance",
+  });
+  const [ccSummary, setCcSummary] = React.useState<string | null>(null);
+
+  const [askCategory, setAskCategory] = React.useState<AskCategory>("unsure");
+  const [askInput, setAskInput] = React.useState("");
+  const [askMsgs, setAskMsgs] = React.useState<Msg[]>(() => [starterMessage(personaId, "ask-before-book")]);
+
+  const [normalTreatment, setNormalTreatment] = React.useState<TreatmentType>("botox-dysport");
+  const [normalTimeline, setNormalTimeline] = React.useState<TimelineBucket>("day-1");
+  const [normalSymptom, setNormalSymptom] = React.useState<SymptomId>("swelling");
+  const [normalResult, setNormalResult] = React.useState<string | null>(null);
+
+  const [tlTreatment, setTlTreatment] = React.useState<TimelineTreatment>("botox-dysport");
+  const [tlStepId, setTlStepId] = React.useState<TimelineStepId>("before");
+  const [tlMsgs, setTlMsgs] = React.useState<Msg[]>(() => [starterMessage(personaId, "timeline-simulator")]);
+  const [tlInput, setTlInput] = React.useState("");
+
+  const [roadmapPriorities, setRoadmapPriorities] = React.useState<BeautyPriority[]>([]);
+  const [roadmapNotes, setRoadmapNotes] = React.useState("");
+  const [roadmapOut, setRoadmapOut] = React.useState<string | null>(null);
+
   React.useEffect(() => {
     // Reset only the active module’s starter when persona changes (keeps UX clean).
     if (module === "education") setEduMsgs([starterMessage(personaId, "education")]);
     if (module === "postcare") setPostMsgs([starterMessage(personaId, "postcare")]);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [personaId]);
+
+  // Module-driven defaults (keeps persona + UX predictable)
+  React.useEffect(() => {
+    if (module === "confidence-check") setPersonaId("peppi");
+    if (module === "timeline-simulator") {
+      const scenario = getTimelineScenario(tlTreatment);
+      setPersonaId(scenario.defaultPersonaId);
+    }
+    if (module === "beauty-roadmap") setPersonaId("founder");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [module, tlTreatment]);
 
   async function sendEducation() {
     const text = eduInput.trim();
@@ -165,7 +249,23 @@ export function CareEngine() {
       {/* Module selector */}
       <div className="p-5 border-b border-white/10">
         <div className="flex flex-wrap gap-2">
-          {(["education", "preconsult", "booking", "postcare"] as const).map((m) => (
+          {(
+            [
+              "education",
+              "preconsult",
+              "booking",
+              "postcare",
+              ...(CARE_EXPERIENCE_ENABLED
+                ? ([
+                    "confidence-check",
+                    "ask-before-book",
+                    "normal-checker",
+                    "timeline-simulator",
+                    "beauty-roadmap",
+                  ] as const)
+                : []),
+            ] as const
+          ).map((m) => (
             <button
               key={m}
               type="button"
@@ -194,6 +294,7 @@ export function CareEngine() {
                 personaId === p.id
                   ? "border-pink-500/40 bg-white/5 text-pink-300"
                   : "border-white/10 text-white/70 hover:bg-white/5 hover:text-white",
+                module === "confidence-check" ? "opacity-60 pointer-events-none" : "",
               )}
             >
               <span className="mr-1">{PERSONA_UI[p.id as PersonaId].emoji}</span>
@@ -201,6 +302,11 @@ export function CareEngine() {
             </button>
           ))}
         </div>
+        {module === "confidence-check" ? (
+          <p className="mt-3 text-xs text-white/60">
+            Confidence Check™ is led by Peppi tone (education-first, non-medical).
+          </p>
+        ) : null}
       </div>
 
       {/* Module content */}
@@ -426,6 +532,639 @@ export function CareEngine() {
               >
                 Send
               </button>
+            </div>
+          </div>
+        ) : null}
+
+        {module === "confidence-check" ? (
+          <div>
+            <p className="text-sm text-white/70">
+              The Confidence Check™ — a short, reflective flow to clarify what you want before booking (no medical advice).
+            </p>
+
+            <div className="mt-6 grid gap-4">
+              <div className="grid gap-2">
+                <label className="text-sm font-semibold text-white">{CONFIDENCE_CHECK_QUESTIONS[0].label}</label>
+                <p className="text-xs text-white/60">{CONFIDENCE_CHECK_QUESTIONS[0].helper}</p>
+                <textarea
+                  value={cc.bother}
+                  onChange={(e) => setCc((p) => ({ ...p, bother: e.target.value }))}
+                  className="w-full min-h-[88px] rounded-xl bg-black border border-gray-800 px-4 py-3 text-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-pink-500/50"
+                  placeholder="Example: my forehead lines, feeling tired, uneven texture…"
+                />
+              </div>
+
+              <div className="grid gap-2 md:grid-cols-2">
+                <div className="grid gap-2">
+                  <label className="text-sm font-semibold text-white">{CONFIDENCE_CHECK_QUESTIONS[1].label}</label>
+                  <select
+                    value={cc.changeStyle}
+                    onChange={(e) => setCc((p) => ({ ...p, changeStyle: e.target.value as ConfidenceCheckAnswer["changeStyle"] }))}
+                    className="rounded-xl bg-black border border-gray-800 px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-pink-500/50"
+                  >
+                    <option value="subtle">Subtle</option>
+                    <option value="noticeable">Noticeable</option>
+                    <option value="unsure">Unsure</option>
+                  </select>
+                </div>
+                <div className="grid gap-2">
+                  <label className="text-sm font-semibold text-white">{CONFIDENCE_CHECK_QUESTIONS[2].label}</label>
+                  <select
+                    value={cc.firstTime}
+                    onChange={(e) => setCc((p) => ({ ...p, firstTime: e.target.value as ConfidenceCheckAnswer["firstTime"] }))}
+                    className="rounded-xl bg-black border border-gray-800 px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-pink-500/50"
+                  >
+                    <option value="yes">Yes</option>
+                    <option value="no">No</option>
+                    <option value="unsure">Unsure</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid gap-2 md:grid-cols-2">
+                <div className="grid gap-2">
+                  <label className="text-sm font-semibold text-white">{CONFIDENCE_CHECK_QUESTIONS[3].label}</label>
+                  <select
+                    value={cc.timeframe}
+                    onChange={(e) => setCc((p) => ({ ...p, timeframe: e.target.value as ConfidenceCheckAnswer["timeframe"] }))}
+                    className="rounded-xl bg-black border border-gray-800 px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-pink-500/50"
+                  >
+                    <option value="asap">ASAP</option>
+                    <option value="2-4weeks">2–4 weeks</option>
+                    <option value="1-3months">1–3 months</option>
+                    <option value="just-researching">Just researching</option>
+                  </select>
+                </div>
+                <div className="grid gap-2">
+                  <label className="text-sm font-semibold text-white">{CONFIDENCE_CHECK_QUESTIONS[4].label}</label>
+                  <select
+                    value={cc.downtimeComfort}
+                    onChange={(e) =>
+                      setCc((p) => ({ ...p, downtimeComfort: e.target.value as ConfidenceCheckAnswer["downtimeComfort"] }))
+                    }
+                    className="rounded-xl bg-black border border-gray-800 px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-pink-500/50"
+                  >
+                    <option value="low">Low</option>
+                    <option value="medium">Medium</option>
+                    <option value="high">High</option>
+                    <option value="unsure">Unsure</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid gap-2">
+                <label className="text-sm font-semibold text-white">{CONFIDENCE_CHECK_QUESTIONS[5].label}</label>
+                <select
+                  value={cc.decisionStyle}
+                  onChange={(e) =>
+                    setCc((p) => ({ ...p, decisionStyle: e.target.value as ConfidenceCheckAnswer["decisionStyle"] }))
+                  }
+                  className="rounded-xl bg-black border border-gray-800 px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-pink-500/50"
+                >
+                  <option value="i-need-guidance">I need guidance</option>
+                  <option value="i-just-want-options">I want options</option>
+                  <option value="i-know-what-i-want">I know what I want</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="mt-6 flex flex-col sm:flex-row gap-3">
+              <button
+                type="button"
+                className="px-6 py-3 rounded-full bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 text-white font-semibold hover:shadow-2xl hover:shadow-pink-500/25 transition"
+                onClick={() => setCcSummary(buildConfidenceSummary(cc))}
+              >
+                Generate Summary
+              </button>
+              <CTA href={BOOKING_URL} variant="outline">
+                Optional: Book a consult
+              </CTA>
+              <button
+                type="button"
+                className="px-6 py-3 rounded-full border border-white/20 text-white hover:bg-white/5 transition"
+                onClick={() => {
+                  setCcSummary(null);
+                  setCc({
+                    bother: "",
+                    changeStyle: "unsure",
+                    firstTime: "unsure",
+                    timeframe: "just-researching",
+                    downtimeComfort: "unsure",
+                    decisionStyle: "i-need-guidance",
+                  });
+                }}
+              >
+                Reset
+              </button>
+            </div>
+
+            {ccSummary ? (
+              <div className="mt-6 rounded-2xl border border-white/10 bg-white/5 p-5 whitespace-pre-wrap text-sm text-white">
+                {ccSummary}
+                <p className="mt-4 text-xs text-white/60">{complianceFooter()}</p>
+              </div>
+            ) : null}
+          </div>
+        ) : null}
+
+        {module === "ask-before-book" ? (
+          <div>
+            <p className="text-sm text-white/70">
+              Ask‑Before‑You‑Book Engine™ — ask a question, get routed to the right expert voice, then book if you feel confident.
+            </p>
+
+            <div className="mt-4 flex flex-wrap gap-2">
+              {ASK_CATEGORIES.map((c) => (
+                <button
+                  key={c.id}
+                  type="button"
+                  onClick={() => setAskCategory(c.id)}
+                  className={cx(
+                    "text-xs font-semibold rounded-full px-3 py-2 border transition",
+                    askCategory === c.id
+                      ? "border-pink-500/40 bg-white/5 text-pink-300"
+                      : "border-white/10 text-white/70 hover:bg-white/5 hover:text-white",
+                  )}
+                >
+                  {c.label}
+                </button>
+              ))}
+            </div>
+
+            <div className="mt-6 max-h-[320px] overflow-auto space-y-4">
+              {askMsgs.map((m, i) => (
+                <div
+                  key={i}
+                  className={cx(
+                    "whitespace-pre-wrap text-sm leading-relaxed",
+                    m.role === "user"
+                      ? "text-white bg-white/5 border border-white/10 rounded-2xl p-4"
+                      : "text-gray-200",
+                  )}
+                >
+                  {m.content}
+                </div>
+              ))}
+              {sending ? <div className="text-sm text-white/60">Thinking…</div> : null}
+            </div>
+
+            <div className="mt-4 flex flex-wrap gap-2">
+              {ASK_BEFORE_BOOK_SUGGESTIONS.slice(0, 4).map((s) => (
+                <button
+                  key={s}
+                  type="button"
+                  onClick={() => setAskInput(s)}
+                  className="text-left text-xs text-white/80 border border-white/10 rounded-full px-3 py-2 hover:bg-white/5 transition"
+                >
+                  {s}
+                </button>
+              ))}
+            </div>
+
+            <div className="mt-4 flex gap-2">
+              <input
+                value={askInput}
+                onChange={(e) => setAskInput(e.target.value)}
+                placeholder="Ask a question…"
+                className="flex-1 rounded-xl bg-black border border-gray-800 px-4 py-3 text-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-pink-500/50"
+                onKeyDown={(e) => {
+                  if (e.key !== "Enter") return;
+                  const q = askInput.trim();
+                  if (!q) return;
+                  void (async () => {
+                    const next: Msg[] = [...askMsgs, { role: "user", content: q }];
+                    setAskMsgs(next);
+                    setAskInput("");
+                    setSending(true);
+                    try {
+                      const selected = ASK_CATEGORIES.find((x) => x.id === askCategory)?.personaId ?? "peppi";
+                      const routed = askCategory === "unsure" ? suggestPersonaForQuestion(q) : selected;
+                      setPersonaId(routed);
+                      const data = await chat({ personaId: routed, module: "education", messages: next });
+                      setAskMsgs((prev) => [
+                        ...prev,
+                        {
+                          role: "assistant",
+                          content: [
+                            data.reply?.trim() || "Please try again.",
+                            "",
+                            "Would you like to book a consultation?",
+                          ].join("\n"),
+                        },
+                      ]);
+                    } finally {
+                      setSending(false);
+                    }
+                  })();
+                }}
+              />
+              <button
+                type="button"
+                disabled={sending}
+                className="px-4 py-3 rounded-xl bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 text-white font-semibold hover:shadow-2xl hover:shadow-pink-500/25 transition disabled:opacity-60"
+                onClick={() => {
+                  const q = askInput.trim();
+                  if (!q) return;
+                  void (async () => {
+                    const next: Msg[] = [...askMsgs, { role: "user", content: q }];
+                    setAskMsgs(next);
+                    setAskInput("");
+                    setSending(true);
+                    try {
+                      const selected = ASK_CATEGORIES.find((x) => x.id === askCategory)?.personaId ?? "peppi";
+                      const routed = askCategory === "unsure" ? suggestPersonaForQuestion(q) : selected;
+                      setPersonaId(routed);
+                      const data = await chat({ personaId: routed, module: "education", messages: next });
+                      setAskMsgs((prev) => [
+                        ...prev,
+                        {
+                          role: "assistant",
+                          content: [
+                            data.reply?.trim() || "Please try again.",
+                            "",
+                            "Would you like to book a consultation?",
+                          ].join("\n"),
+                        },
+                      ]);
+                    } finally {
+                      setSending(false);
+                    }
+                  })();
+                }}
+              >
+                Ask
+              </button>
+            </div>
+
+            <div className="mt-6 flex flex-col sm:flex-row gap-3">
+              <CTA href={BOOKING_URL} variant="gradient">
+                Book online (optional)
+              </CTA>
+              <CTA href="/contact" variant="outline">
+                Contact us
+              </CTA>
+            </div>
+            <p className="mt-4 text-xs text-white/60">{complianceFooter()}</p>
+          </div>
+        ) : null}
+
+        {module === "normal-checker" ? (
+          <div>
+            <p className="text-sm text-white/70">
+              “Is This Normal?” Checker™ — choose treatment + symptom + timeline for calm, educational guidance (no diagnosis).
+            </p>
+
+            <div className="mt-6 grid gap-4 md:grid-cols-3">
+              <div className="grid gap-2">
+                <label className="text-sm font-semibold text-white">Treatment type</label>
+                <select
+                  value={normalTreatment}
+                  onChange={(e) => setNormalTreatment(e.target.value as TreatmentType)}
+                  className="rounded-xl bg-black border border-gray-800 px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-pink-500/50"
+                >
+                  {TREATMENT_OPTIONS.map((t) => (
+                    <option key={t.id} value={t.id}>
+                      {t.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="grid gap-2">
+                <label className="text-sm font-semibold text-white">Symptom</label>
+                <select
+                  value={normalSymptom}
+                  onChange={(e) => setNormalSymptom(e.target.value as SymptomId)}
+                  className="rounded-xl bg-black border border-gray-800 px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-pink-500/50"
+                >
+                  {SYMPTOM_OPTIONS.map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="grid gap-2">
+                <label className="text-sm font-semibold text-white">Timeline</label>
+                <select
+                  value={normalTimeline}
+                  onChange={(e) => setNormalTimeline(e.target.value as TimelineBucket)}
+                  className="rounded-xl bg-black border border-gray-800 px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-pink-500/50"
+                >
+                  {TIMELINE_OPTIONS.map((t) => (
+                    <option key={t.id} value={t.id}>
+                      {t.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div className="mt-6 flex flex-col sm:flex-row gap-3">
+              <button
+                type="button"
+                className="px-6 py-3 rounded-full bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 text-white font-semibold hover:shadow-2xl hover:shadow-pink-500/25 transition"
+                onClick={() => {
+                  const res = normalCheck({ treatment: normalTreatment, symptom: normalSymptom, timeline: normalTimeline });
+                  if (res.severity === "red-flag" || postTreatmentRedFlags(`${normalSymptom} ${normalTreatment}`)) {
+                    setPersonaId("ryan");
+                    setNormalResult(
+                      [
+                        ryanSafetyOverrideReply(`${normalTreatment} / ${normalSymptom} / ${normalTimeline}`),
+                        "",
+                        "Please contact us directly for guidance.",
+                      ].join("\n"),
+                    );
+                    return;
+                  }
+                  setNormalResult(
+                    [
+                      `${res.title}`,
+                      "",
+                      res.guidance,
+                      "",
+                      "Next steps:",
+                      ...res.nextSteps.map((x) => `- ${x}`),
+                      "",
+                      complianceFooter(),
+                    ].join("\n"),
+                  );
+                }}
+              >
+                Check
+              </button>
+              <CTA href="/contact" variant="outline">
+                Contact us
+              </CTA>
+              <CTA href={BOOKING_URL} variant="outline">
+                Optional: Book
+              </CTA>
+            </div>
+
+            {normalResult ? (
+              <div className="mt-6 rounded-2xl border border-white/10 bg-white/5 p-5 whitespace-pre-wrap text-sm text-white">
+                {normalResult}
+              </div>
+            ) : null}
+          </div>
+        ) : null}
+
+        {module === "timeline-simulator" ? (
+          <div>
+            <p className="text-sm text-white/70">
+              Treatment Timeline Simulator™ — expectation-setting only (no fake results, no promises). Ask questions as you go.
+            </p>
+
+            <div className="mt-6 grid gap-4 md:grid-cols-3">
+              <div className="grid gap-2 md:col-span-1">
+                <label className="text-sm font-semibold text-white">Timeline</label>
+                <select
+                  value={tlTreatment}
+                  onChange={(e) => {
+                    const id = e.target.value as TimelineTreatment;
+                    setTlTreatment(id);
+                    const scenario = getTimelineScenario(id);
+                    setTlStepId(scenario.steps[0]?.id ?? "before");
+                  }}
+                  className="rounded-xl bg-black border border-gray-800 px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-pink-500/50"
+                >
+                  {TIMELINE_SCENARIOS.map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.label}
+                    </option>
+                  ))}
+                </select>
+
+                <div className="mt-4 flex flex-wrap gap-2">
+                  {getTimelineScenario(tlTreatment).steps.map((st) => (
+                    <button
+                      key={st.id}
+                      type="button"
+                      onClick={() => setTlStepId(st.id)}
+                      className={cx(
+                        "text-xs font-semibold rounded-full px-3 py-2 border transition",
+                        tlStepId === st.id
+                          ? "border-pink-500/40 bg-white/5 text-pink-300"
+                          : "border-white/10 text-white/70 hover:bg-white/5 hover:text-white",
+                      )}
+                    >
+                      {st.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="md:col-span-2">
+                {(() => {
+                  const scenario = getTimelineScenario(tlTreatment);
+                  const step = scenario.steps.find((s) => s.id === tlStepId) ?? scenario.steps[0];
+                  return (
+                    <div className="rounded-2xl border border-gray-800 bg-gradient-to-b from-gray-950/60 to-black p-6">
+                      <p className="text-xs text-white/60">Persona narration</p>
+                      <p className="mt-1 text-sm text-white/90">
+                        {getPersonaName(personaId)} — {scenario.label} — {step.label}
+                      </p>
+
+                      <div className="mt-4 grid gap-4 md:grid-cols-2">
+                        <div>
+                          <p className="text-sm font-semibold text-white">What changes</p>
+                          <ul className="mt-2 space-y-1 text-sm text-gray-300">
+                            {step.whatChanges.map((x) => (
+                              <li key={x}>- {x}</li>
+                            ))}
+                          </ul>
+                        </div>
+                        <div>
+                          <p className="text-sm font-semibold text-white">What does NOT change</p>
+                          <ul className="mt-2 space-y-1 text-sm text-gray-300">
+                            {step.whatDoesNotChange.map((x) => (
+                              <li key={x}>- {x}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      </div>
+
+                      <div className="mt-4 grid gap-4 md:grid-cols-2">
+                        <div>
+                          <p className="text-sm font-semibold text-white">What’s normal</p>
+                          <ul className="mt-2 space-y-1 text-sm text-gray-300">
+                            {step.whatsNormal.map((x) => (
+                              <li key={x}>- {x}</li>
+                            ))}
+                          </ul>
+                        </div>
+                        <div>
+                          <p className="text-sm font-semibold text-white">What’s NOT normal</p>
+                          <ul className="mt-2 space-y-1 text-sm text-gray-300">
+                            {step.whatsNotNormal.map((x) => (
+                              <li key={x}>- {x}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      </div>
+
+                      <p className="mt-4 text-xs text-white/60">{complianceFooter()}</p>
+                    </div>
+                  );
+                })()}
+
+                <div className="mt-6 rounded-2xl border border-gray-800 bg-black/40 overflow-hidden">
+                  <div className="p-4 border-b border-white/10">
+                    <p className="text-sm font-semibold text-white">Ask a question about this timeline</p>
+                    <p className="mt-1 text-xs text-white/60">Educational only. No diagnosis. No personalized advice.</p>
+                  </div>
+                  <div className="p-4 max-h-[260px] overflow-auto space-y-4">
+                    {tlMsgs.map((m, i) => (
+                      <div
+                        key={i}
+                        className={cx(
+                          "whitespace-pre-wrap text-sm leading-relaxed",
+                          m.role === "user"
+                            ? "text-white bg-white/5 border border-white/10 rounded-2xl p-4"
+                            : "text-gray-200",
+                        )}
+                      >
+                        {m.content}
+                      </div>
+                    ))}
+                    {sending ? <div className="text-sm text-white/60">Thinking…</div> : null}
+                  </div>
+                  <div className="p-4 border-t border-white/10">
+                    <div className="flex gap-2">
+                      <input
+                        value={tlInput}
+                        onChange={(e) => setTlInput(e.target.value)}
+                        placeholder="Ask a question…"
+                        className="flex-1 rounded-xl bg-black border border-gray-800 px-4 py-3 text-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-pink-500/50"
+                        onKeyDown={(e) => {
+                          if (e.key !== "Enter") return;
+                          const q = tlInput.trim();
+                          if (!q) return;
+                          void (async () => {
+                            const next: Msg[] = [...tlMsgs, { role: "user", content: q }];
+                            setTlMsgs(next);
+                            setTlInput("");
+                            setSending(true);
+                            try {
+                              const data = await chat({ personaId, module: "education", messages: next });
+                              setTlMsgs((prev) => [...prev, { role: "assistant", content: data.reply?.trim() || "Please try again." }]);
+                            } finally {
+                              setSending(false);
+                            }
+                          })();
+                        }}
+                      />
+                      <button
+                        type="button"
+                        disabled={sending}
+                        className="px-4 py-3 rounded-xl bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 text-white font-semibold hover:shadow-2xl hover:shadow-pink-500/25 transition disabled:opacity-60"
+                        onClick={() => {
+                          const q = tlInput.trim();
+                          if (!q) return;
+                          void (async () => {
+                            const next: Msg[] = [...tlMsgs, { role: "user", content: q }];
+                            setTlMsgs(next);
+                            setTlInput("");
+                            setSending(true);
+                            try {
+                              const data = await chat({ personaId, module: "education", messages: next });
+                              setTlMsgs((prev) => [...prev, { role: "assistant", content: data.reply?.trim() || "Please try again." }]);
+                            } finally {
+                              setSending(false);
+                            }
+                          })();
+                        }}
+                      >
+                        Ask
+                      </button>
+                    </div>
+                    <div className="mt-4 flex flex-col sm:flex-row gap-3">
+                      <CTA href={BOOKING_URL} variant="gradient">
+                        Book online (optional)
+                      </CTA>
+                      <CTA href="/services" variant="outline">
+                        Browse services
+                      </CTA>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : null}
+
+        {module === "beauty-roadmap" ? (
+          <div>
+            <p className="text-sm text-white/70">
+              Beauty Roadmap™ — a long‑term, education-first view of “now → maintenance → long‑term” (no treatment plans, no promises).
+            </p>
+
+            <div className="mt-6 grid gap-4">
+              <div className="flex flex-wrap gap-2">
+                {BEAUTY_PRIORITIES.map((p) => {
+                  const active = roadmapPriorities.includes(p.id);
+                  return (
+                    <button
+                      key={p.id}
+                      type="button"
+                      onClick={() =>
+                        setRoadmapPriorities((prev) =>
+                          active ? prev.filter((x) => x !== p.id) : [...prev, p.id],
+                        )
+                      }
+                      className={cx(
+                        "text-xs font-semibold rounded-full px-3 py-2 border transition",
+                        active
+                          ? "border-pink-500/40 bg-white/5 text-pink-300"
+                          : "border-white/10 text-white/70 hover:bg-white/5 hover:text-white",
+                      )}
+                      title={p.note}
+                    >
+                      {p.label}
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div className="grid gap-2">
+                <label className="text-sm font-semibold text-white">Notes (optional)</label>
+                <textarea
+                  value={roadmapNotes}
+                  onChange={(e) => setRoadmapNotes(e.target.value)}
+                  className="w-full min-h-[88px] rounded-xl bg-black border border-gray-800 px-4 py-3 text-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-pink-500/50"
+                  placeholder="Example: I want to look refreshed but still like me…"
+                />
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-3">
+                <button
+                  type="button"
+                  className="px-6 py-3 rounded-full bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 text-white font-semibold hover:shadow-2xl hover:shadow-pink-500/25 transition"
+                  onClick={() => setRoadmapOut(buildBeautyRoadmap(roadmapPriorities, roadmapNotes))}
+                >
+                  Generate Roadmap
+                </button>
+                <CTA href={BOOKING_URL} variant="outline">
+                  Optional: Book a consult
+                </CTA>
+                <button
+                  type="button"
+                  className="px-6 py-3 rounded-full border border-white/20 text-white hover:bg-white/5 transition"
+                  onClick={() => {
+                    setRoadmapOut(null);
+                    setRoadmapNotes("");
+                    setRoadmapPriorities([]);
+                  }}
+                >
+                  Reset
+                </button>
+              </div>
+
+              {roadmapOut ? (
+                <div className="rounded-2xl border border-white/10 bg-white/5 p-5 whitespace-pre-wrap text-sm text-white">
+                  {roadmapOut}
+                  <p className="mt-4 text-xs text-white/60">{complianceFooter()}</p>
+                </div>
+              ) : null}
             </div>
           </div>
         ) : null}

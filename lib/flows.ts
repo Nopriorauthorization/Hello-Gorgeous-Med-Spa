@@ -7,7 +7,12 @@ export type CareModuleId =
   | "education"
   | "preconsult"
   | "booking"
-  | "postcare";
+  | "postcare"
+  | "confidence-check"
+  | "ask-before-book"
+  | "normal-checker"
+  | "timeline-simulator"
+  | "beauty-roadmap";
 
 export type PreConsultAnswer = {
   goals: string;
