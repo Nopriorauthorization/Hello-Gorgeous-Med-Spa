@@ -1,135 +1,82 @@
-import Link from "next/link";
-
-import { Container } from "@/components/ui/Container";
-import { Section } from "@/components/ui/Section";
-import { Button } from "@/components/ui/Button";
-import { FadeUp } from "@/components/ui/FadeUp";
-import { services } from "@/content/services";
-import { SiteJsonLd } from "@/components/seo/SiteJsonLd";
-import { FAQJsonLd } from "@/components/seo/FAQJsonLd";
-import { faqsHome } from "@/content/faqs";
-
 export default function HomePage() {
   return (
     <>
-      <SiteJsonLd />
-      <FAQJsonLd faqs={faqsHome} />
+      {/* TODO: add per-page SEO + JSON-LD in next commit */}
+      <section className="relative min-h-screen flex items-center justify-center px-6 py-20">
+        <div className="absolute inset-0 bg-gradient-to-b from-purple-900/20 via-black to-black" />
+        <div className="absolute top-20 left-10 w-72 h-72 bg-pink-500/10 rounded-full blur-3xl animate-pulse" />
+        <div
+          className="absolute bottom-20 right-10 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl animate-pulse"
+          style={{ animationDelay: "1s" }}
+        />
 
-      <main>
-        <Section className="pt-14 md:pt-20">
-          <Container>
-            <div className="grid items-center gap-12 lg:grid-cols-2">
-              <FadeUp>
-                <div>
-                  <p className="inline-flex items-center gap-2 rounded-full border border-ink-100 bg-white px-3 py-1 text-xs font-medium text-ink-700 shadow-sm">
-                    Luxury medical aesthetics in Oswego, IL
-                  </p>
-                  <h1 className="mt-5 text-balance text-4xl font-semibold tracking-tight text-ink-950 md:text-5xl">
-                    Hello Gorgeous Med Spa
-                  </h1>
-                  <p className="mt-4 max-w-xl text-pretty text-lg text-ink-700">
-                    High-end, results-driven aesthetic treatments—designed to help you look
-                    refreshed, feel confident, and stay naturally you.
-                  </p>
-                  <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-                    <Button asChild>
-                      <Link href="/book">Book a Consultation</Link>
-                    </Button>
-                    <Button asChild variant="secondary">
-                      <Link href="/services">Explore Services</Link>
-                    </Button>
-                  </div>
-                  <p className="mt-4 text-sm text-ink-600">
-                    Serving Oswego, Naperville, Aurora, and Plainfield.
-                  </p>
-                </div>
-              </FadeUp>
+        <div className="relative z-10 max-w-6xl mx-auto text-center">
+          <div className="fade-up is-visible">
+            <p className="text-pink-400 text-lg md:text-xl font-medium mb-6 tracking-wide">
+              LUXURY MEDICAL AESTHETICS IN OSWEGO, IL
+            </p>
+            <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold mb-8 leading-tight">
+              Look{" "}
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-pink-400 via-purple-400 to-indigo-400">
+                refreshed
+              </span>
+              . Feel confident.
+            </h1>
+            <p className="text-xl md:text-2xl text-gray-300 max-w-4xl mx-auto mb-12 leading-relaxed">
+              Provider-led injectables and regenerative aesthetics—built for natural-looking
+              results and a high-end experience.{" "}
+              <span className="text-white font-semibold">
+                Serving Oswego, Naperville, Aurora, and Plainfield.
+              </span>
+            </p>
 
-              <FadeUp delay={0.08}>
-                <div className="relative">
-                  <div className="absolute -inset-6 rounded-[28px] bg-gradient-to-br from-brand-500/20 via-white to-brand-500/10 blur-2xl" />
-                  <div className="relative overflow-hidden rounded-2xl border border-ink-100 bg-white p-6 shadow-card">
-                    <div className="flex items-center justify-between">
-                      <p className="text-sm font-medium text-ink-800">Featured treatments</p>
-                      <span className="rounded-full bg-brand-50 px-2 py-1 text-xs font-semibold text-brand-700">
-                        Most booked
-                      </span>
-                    </div>
-                    <ul className="mt-4 space-y-3">
-                      {services.slice(0, 4).map((s) => (
-                        <li
-                          key={s.slug}
-                          className="flex items-center justify-between rounded-xl border border-ink-100 bg-white px-4 py-3"
-                        >
-                          <div>
-                            <p className="font-medium text-ink-950">{s.name}</p>
-                            <p className="text-sm text-ink-600">{s.short}</p>
-                          </div>
-                          <Link
-                            className="text-sm font-semibold text-brand-700 hover:text-brand-800"
-                            href={`/services/${s.slug}`}
-                          >
-                            View
-                          </Link>
-                        </li>
-                      ))}
-                    </ul>
-                    <div className="mt-6 rounded-xl bg-ink-950 p-5 text-white shadow-glow">
-                      <p className="text-sm text-white/80">New here?</p>
-                      <p className="mt-1 text-lg font-semibold">Start with a personalized consult.</p>
-                      <div className="mt-4">
-                        <Button asChild variant="primaryDark">
-                          <Link href="/book">Schedule Now</Link>
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </FadeUp>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-16">
+              <a
+                className="group px-8 py-4 bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 rounded-full text-lg font-semibold hover:shadow-2xl hover:shadow-pink-500/25 transition-all duration-300 hover:scale-105 flex items-center gap-2"
+                href="/book"
+              >
+                Book Now
+                <svg
+                  stroke="currentColor"
+                  fill="none"
+                  strokeWidth="2"
+                  viewBox="0 0 24 24"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="group-hover:translate-x-1 transition-transform"
+                  height="1em"
+                  width="1em"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <line x1="5" y1="12" x2="19" y2="12" />
+                  <polyline points="12 5 19 12 12 19" />
+                </svg>
+              </a>
+              <a
+                className="px-8 py-4 border border-white/20 rounded-full text-lg font-semibold hover:bg-white/5 transition-all duration-300"
+                href="/services"
+              >
+                See Services
+              </a>
             </div>
-          </Container>
-        </Section>
 
-        <Section>
-          <Container>
-            <FadeUp>
-              <div className="flex items-end justify-between gap-6">
-                <div>
-                  <h2 className="text-2xl font-semibold tracking-tight text-ink-950 md:text-3xl">
-                    Services built for natural-looking results
-                  </h2>
-                  <p className="mt-2 max-w-2xl text-ink-700">
-                    Evidence-based, provider-led care with a luxury experience—without the
-                    pressure.
-                  </p>
-                </div>
-                <Link className="hidden text-sm font-semibold text-brand-700 hover:text-brand-800 md:block" href="/services">
-                  View all services
-                </Link>
+            <div className="flex flex-wrap justify-center items-center gap-6 text-sm text-gray-400">
+              <div className="flex items-center gap-2">
+                <span className="text-green-400">✓</span>
+                <span>Provider-led care</span>
               </div>
-            </FadeUp>
-
-            <div className="mt-8 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {services.map((s, idx) => (
-                <FadeUp key={s.slug} delay={0.03 * idx}>
-                  <Link
-                    href={`/services/${s.slug}`}
-                    className="group block rounded-2xl border border-ink-100 bg-white p-6 shadow-card transition hover:-translate-y-0.5 hover:border-ink-200 hover:shadow-glow"
-                  >
-                    <p className="text-sm font-semibold text-brand-700">{s.category}</p>
-                    <p className="mt-2 text-xl font-semibold text-ink-950">{s.name}</p>
-                    <p className="mt-2 text-sm text-ink-700">{s.short}</p>
-                    <p className="mt-4 text-sm font-semibold text-ink-950">
-                      Learn more{" "}
-                      <span className="inline-block transition group-hover:translate-x-0.5">→</span>
-                    </p>
-                  </Link>
-                </FadeUp>
-              ))}
+              <div className="flex items-center gap-2">
+                <span className="text-blue-400">✓</span>
+                <span>Natural-looking results</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-pink-400">✓</span>
+                <span>Luxury experience</span>
+              </div>
             </div>
-          </Container>
-        </Section>
-      </main>
+          </div>
+        </div>
+      </section>
     </>
   );
 }

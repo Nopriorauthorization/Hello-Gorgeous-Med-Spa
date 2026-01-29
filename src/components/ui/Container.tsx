@@ -6,7 +6,19 @@ export function Container({
 }: React.HTMLAttributes<HTMLDivElement>) {
   return (
     <div
-      className={cn("mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8", className)}
+      className={cn("mx-auto w-full max-w-6xl", className)}
+      {...props}
+    />
+  );
+}
+
+export function WideContainer({
+  className,
+  ...props
+}: React.HTMLAttributes<HTMLDivElement>) {
+  return (
+    <div
+      className={cn("mx-auto w-full max-w-7xl px-4", className)}
       {...props}
     />
   );

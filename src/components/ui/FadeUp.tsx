@@ -35,11 +35,11 @@ export function FadeUp({
     <div
       ref={ref}
       className={cn(
-        "transition-all duration-700 will-change-transform",
-        isVisible ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0",
+        "fade-up will-change-transform",
+        isVisible && "is-visible",
         className,
       )}
-      style={{ transitionDelay: `${delay}s` }}
+      style={delay ? { transitionDelay: `${delay}s` } : undefined}
     >
       {children}
     </div>

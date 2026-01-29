@@ -2,33 +2,47 @@ import React from "react";
 
 import { cn } from "@/lib/cn";
 
-type ButtonVariant = "primary" | "secondary" | "primaryDark";
+type ButtonVariant = "gradient" | "outline" | "ghost" | "white";
+type ButtonShape = "pill" | "rounded";
 
 const base =
-  "inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white disabled:opacity-50 disabled:pointer-events-none";
+  "inline-flex items-center justify-center gap-2 font-semibold transition-all duration-300 disabled:opacity-50 disabled:pointer-events-none focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-500/70 focus-visible:ring-offset-2 focus-visible:ring-offset-black";
+
+const shapes: Record<ButtonShape, string> = {
+  pill: "rounded-full",
+  rounded: "rounded-lg",
+};
 
 const variants: Record<ButtonVariant, string> = {
-  primary:
-    "bg-brand-600 text-white shadow-glow hover:bg-brand-700 active:bg-brand-800",
-  secondary:
-    "border border-ink-200 bg-white text-ink-950 hover:bg-ink-50 active:bg-ink-100",
-  primaryDark:
-    "bg-brand-500 text-white hover:bg-brand-400 active:bg-brand-600 focus-visible:ring-offset-ink-950",
+  gradient:
+    "bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 text-white hover:shadow-2xl hover:shadow-pink-500/25 hover:scale-105",
+  outline:
+    "border border-white/20 text-white hover:bg-white/5",
+  ghost:
+    "text-white/70 hover:text-white hover:bg-white/5",
+  white:
+    "bg-white text-black hover:shadow-2xl hover:shadow-white/25 hover:scale-105",
 };
 
 export function Button({
   asChild,
-  variant = "primary",
+  variant = "gradient",
+  shape = "pill",
   className,
   children,
   ...props
 }: {
   asChild?: boolean;
   variant?: ButtonVariant;
+  shape?: ButtonShape;
   className?: string;
   children: React.ReactNode;
 } & React.ButtonHTMLAttributes<HTMLButtonElement>) {
-  const classes = cn(base, variants[variant], className);
+  const size =
+    shape === "pill"
+      ? "px-8 py-4 text-lg"
+      : "px-4 py-2 text-sm font-semibold";
+  const classes = cn(base, shapes[shape], size, variants[variant], className);
 
   if (asChild && React.isValidElement(children)) {
     return React.cloneElement(children, {

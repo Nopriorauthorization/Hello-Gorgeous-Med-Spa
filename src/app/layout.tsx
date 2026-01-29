@@ -39,10 +39,14 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={inter.variable}>
-      <body className="min-h-screen bg-white text-ink-950 antialiased">
+      <body className="bg-black text-white min-h-screen antialiased">
         <Header />
-        {children}
-        <Footer />
+        <main className="pt-16">
+          <div className="min-h-screen bg-black text-white overflow-x-hidden">
+            {children}
+            <Footer />
+          </div>
+        </main>
       </body>
     </html>
   );

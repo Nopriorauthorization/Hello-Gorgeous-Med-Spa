@@ -5,37 +5,39 @@ import { site } from "@/content/site";
 
 export function Footer() {
   return (
-    <footer className="border-t border-ink-100 bg-white">
-      <Container className="py-12">
-        <div className="grid gap-10 md:grid-cols-3">
+    <footer className="py-16 px-6 border-t border-white/10">
+      <Container>
+        <div className="grid md:grid-cols-4 gap-8 mb-12">
           <div>
-            <p className="text-base font-semibold text-ink-950">{site.name}</p>
-            <p className="mt-2 text-sm text-ink-700">{site.description}</p>
-            <p className="mt-4 text-sm text-ink-700">
+            <h3 className="text-xl font-bold text-white mb-4">{site.name}</h3>
+            <p className="text-gray-400 text-sm">
+              Luxury, clinical-meets-beauty aesthetics with results you can trust.
+            </p>
+            <p className="mt-4 text-gray-400 text-sm">
               Serving {site.serviceAreas.join(", ")}.
             </p>
           </div>
 
           <div>
-            <p className="text-sm font-semibold text-ink-950">Explore</p>
-            <ul className="mt-3 space-y-2 text-sm">
+            <h4 className="font-semibold text-white mb-4">Explore</h4>
+            <ul className="space-y-2 text-sm text-gray-400">
               <li>
-                <Link className="text-ink-700 hover:text-ink-950" href="/services">
+                <Link className="hover:text-white transition" href="/services">
                   Services
                 </Link>
               </li>
               <li>
-                <Link className="text-ink-700 hover:text-ink-950" href="/about">
+                <Link className="hover:text-white transition" href="/about">
                   About
                 </Link>
               </li>
               <li>
-                <Link className="text-ink-700 hover:text-ink-950" href="/contact">
+                <Link className="hover:text-white transition" href="/contact">
                   Contact
                 </Link>
               </li>
               <li>
-                <Link className="text-ink-700 hover:text-ink-950" href="/book">
+                <Link className="hover:text-white transition" href="/book">
                   Book Now
                 </Link>
               </li>
@@ -43,15 +45,36 @@ export function Footer() {
           </div>
 
           <div>
-            <p className="text-sm font-semibold text-ink-950">Legal</p>
-            <ul className="mt-3 space-y-2 text-sm">
+            <h4 className="font-semibold text-white mb-4">Services</h4>
+            <ul className="space-y-2 text-sm text-gray-400">
               <li>
-                <Link className="text-ink-700 hover:text-ink-950" href="/privacy">
+                <Link className="hover:text-white transition" href="/services/botox-dysport">
+                  Botox / Dysport
+                </Link>
+              </li>
+              <li>
+                <Link className="hover:text-white transition" href="/services/dermal-fillers">
+                  Dermal Fillers
+                </Link>
+              </li>
+              <li>
+                <Link className="hover:text-white transition" href="/services/weight-loss-glp-1">
+                  Weight Loss (GLP‑1)
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          <div>
+            <h4 className="font-semibold text-white mb-4">Company</h4>
+            <ul className="space-y-2 text-sm text-gray-400">
+              <li>
+                <Link className="hover:text-white transition" href="/privacy">
                   Privacy Policy
                 </Link>
               </li>
               <li>
-                <Link className="text-ink-700 hover:text-ink-950" href="/terms">
+                <Link className="hover:text-white transition" href="/terms">
                   Terms
                 </Link>
               </li>
@@ -59,10 +82,10 @@ export function Footer() {
           </div>
         </div>
 
-        <div className="mt-10 flex flex-col gap-2 border-t border-ink-100 pt-6 text-sm text-ink-600 md:flex-row md:items-center md:justify-between">
+        <div className="border-t border-white/10 pt-8 text-center text-sm text-gray-500">
           <p>© {new Date().getFullYear()} {site.name}. All rights reserved.</p>
-          <p className="text-ink-600">
-            Medical spa services may vary by provider and eligibility.
+          <p className="mt-2">
+            Medical spa services vary by provider, eligibility, and treatment plan.
           </p>
         </div>
       </Container>
