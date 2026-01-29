@@ -6,17 +6,16 @@ import React from "react";
 
 import { CTA } from "./CTA";
 import { SITE } from "@/lib/seo";
+import { BOOKING_URL } from "@/lib/flows";
 
 const nav = [
   { href: "/", label: "Home", icon: "🏠" },
+  { href: "/explore-care", label: "Explore Care", icon: "🧭" },
   { href: "/your-journey", label: "Your Journey", icon: "🫶" },
-  { href: "/understand-your-body", label: "Understand", icon: "🧬" },
-  { href: "/care-and-support", label: "Support", icon: "🤍" },
-  { href: "/about", label: "About", icon: "✨" },
-  { href: "/services", label: "Services", icon: "💉" },
-  { href: "/locations", label: "Locations", icon: "📌" },
-  { href: "/care-engine", label: "Care Engine", icon: "🧠" },
-  { href: "/contact", label: "Contact", icon: "📍" },
+  { href: "/understand-your-body", label: "Understand Your Body", icon: "🧬" },
+  { href: "/care-and-support", label: "Care & Support", icon: "🤍" },
+  { href: "/meet-the-team", label: "Meet Your Care Team", icon: "👥" },
+  { href: BOOKING_URL, label: "Book Now", icon: "📅", external: true },
 ] as const;
 
 function cx(...classes: Array<string | undefined | null | false>) {
@@ -46,18 +45,33 @@ export function Header() {
                 item.href === "/" ? pathname === "/" : pathname?.startsWith(item.href);
               return (
                 <div key={item.href} className="relative">
-                  <Link
-                    href={item.href}
-                    className={cx(
-                      "flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all",
-                      isActive
-                        ? "text-pink-400 bg-white/5"
-                        : "text-white/70 hover:text-white hover:bg-white/5",
-                    )}
-                  >
-                    <span className="text-base">{item.icon}</span>
-                    <span>{item.label}</span>
-                  </Link>
+                  {("external" in item && item.external) ? (
+                    <a
+                      href={item.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={cx(
+                        "flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all",
+                        "text-white/70 hover:text-white hover:bg-white/5",
+                      )}
+                    >
+                      <span className="text-base">{item.icon}</span>
+                      <span>{item.label}</span>
+                    </a>
+                  ) : (
+                    <Link
+                      href={item.href}
+                      className={cx(
+                        "flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all",
+                        isActive
+                          ? "text-pink-400 bg-white/5"
+                          : "text-white/70 hover:text-white hover:bg-white/5",
+                      )}
+                    >
+                      <span className="text-base">{item.icon}</span>
+                      <span>{item.label}</span>
+                    </Link>
+                  )}
                 </div>
               );
             })}
@@ -86,13 +100,7 @@ export function Header() {
             </button>
 
             <div className="hidden md:flex items-center gap-2">
-              <Link
-                className="px-4 py-2 text-sm font-medium text-white/70 hover:text-white transition-colors"
-                href="/contact"
-              >
-                Contact
-              </Link>
-              <CTA href="/book" variant="gradient" className="px-4 py-2 rounded-lg text-sm">
+              <CTA href={BOOKING_URL} variant="gradient" className="px-4 py-2 rounded-lg text-sm">
                 Book Now
               </CTA>
             </div>
@@ -168,30 +176,47 @@ export function Header() {
                 const isActive =
                   item.href === "/" ? pathname === "/" : pathname?.startsWith(item.href);
                 return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    onClick={() => setIsOpen(false)}
-                    className={cx(
-                      "flex items-center gap-3 px-4 py-3 rounded-2xl text-lg font-semibold transition",
-                      isActive
-                        ? "bg-white/5 text-pink-400"
-                        : "hover:bg-white/5 text-white/80 hover:text-white",
-                    )}
-                  >
-                    <span className="text-xl">{item.icon}</span>
-                    <span>{item.label}</span>
-                  </Link>
+                  ("external" in item && item.external) ? (
+                    <a
+                      key={item.href}
+                      href={item.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={() => setIsOpen(false)}
+                      className={cx(
+                        "flex items-center gap-3 px-4 py-3 rounded-2xl text-lg font-semibold transition",
+                        "hover:bg-white/5 text-white/80 hover:text-white",
+                      )}
+                    >
+                      <span className="text-xl">{item.icon}</span>
+                      <span>{item.label}</span>
+                    </a>
+                  ) : (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      onClick={() => setIsOpen(false)}
+                      className={cx(
+                        "flex items-center gap-3 px-4 py-3 rounded-2xl text-lg font-semibold transition",
+                        isActive
+                          ? "bg-white/5 text-pink-400"
+                          : "hover:bg-white/5 text-white/80 hover:text-white",
+                      )}
+                    >
+                      <span className="text-xl">{item.icon}</span>
+                      <span>{item.label}</span>
+                    </Link>
+                  )
                 );
               })}
             </div>
 
             <div className="mt-10 flex flex-col gap-4">
-              <CTA href="/book" variant="gradient" className="w-full">
+              <CTA href={BOOKING_URL} variant="gradient" className="w-full">
                 Book Now
               </CTA>
-              <CTA href="/contact" variant="outline" className="w-full">
-                Contact
+              <CTA href="/explore-care" variant="outline" className="w-full">
+                Explore Care
               </CTA>
             </div>
           </div>

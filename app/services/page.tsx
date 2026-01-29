@@ -26,7 +26,7 @@ export default function ServicesPage() {
         <div className="relative z-10">
           <FadeUp>
             <p className="text-pink-400 text-lg md:text-xl font-medium mb-6 tracking-wide">
-              TREATMENTS BUILT FOR NATURAL-LOOKING RESULTS
+              EXPLORE CARE (SERVICES ATLAS™)
             </p>
             <h1 className="text-4xl md:text-6xl font-bold leading-tight">
               Our{" "}
@@ -35,15 +35,14 @@ export default function ServicesPage() {
               </span>
             </h1>
             <p className="mt-6 text-xl text-gray-300 max-w-3xl leading-relaxed">
-              Browse our core offerings and book with confidence. Serving Oswego, Naperville,
-              Aurora, and Plainfield.
+              Prefer a guided experience? Start with Explore Care to navigate by how you feel—no pressure, education first.
             </p>
             <div className="mt-10 flex flex-col sm:flex-row gap-4">
-              <CTA href="/meet-the-team" variant="outline">
-                Meet the Experts
+              <CTA href="/explore-care" variant="gradient">
+                Explore Care (Services Atlas™)
               </CTA>
-              <CTA href="/book" variant="gradient">
-                Book Now
+              <CTA href="/meet-the-team" variant="outline">
+                Meet Your Care Team
               </CTA>
             </div>
           </FadeUp>

@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { BOOKING_URL } from "@/lib/flows";
 import { SITE, SERVICES } from "@/lib/seo";
 
 export function Footer() {
@@ -20,6 +21,11 @@ export function Footer() {
           <div>
             <h4 className="font-semibold text-white mb-4">Explore</h4>
             <ul className="space-y-2 text-sm text-gray-400">
+              <li>
+                <Link className="hover:text-white transition" href="/explore-care">
+                  Explore Care
+                </Link>
+              </li>
               <li>
                 <Link className="hover:text-white transition" href="/your-journey">
                   Your Journey
@@ -42,7 +48,7 @@ export function Footer() {
               </li>
               <li>
                 <Link className="hover:text-white transition" href="/meet-the-team">
-                  Meet the Experts
+                  Meet Your Care Team
                 </Link>
               </li>
               <li>
@@ -71,9 +77,14 @@ export function Footer() {
                 </Link>
               </li>
               <li>
-                <Link className="hover:text-white transition" href="/book">
+                <a
+                  className="hover:text-white transition"
+                  href={BOOKING_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
                   Book Now
-                </Link>
+                </a>
               </li>
             </ul>
           </div>
