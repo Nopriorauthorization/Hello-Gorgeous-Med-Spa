@@ -9,6 +9,7 @@ import type { PersonaId } from "@/lib/personas/types";
 import { PERSONA_CONFIGS, getPersonaConfig } from "@/lib/personas/index";
 import { PERSONA_UI } from "@/lib/personas/ui";
 import { complianceFooter } from "@/lib/guardrails";
+import { useExperienceMemory } from "@/lib/memory/hooks";
 
 type Msg = { role: "user" | "assistant"; content: string };
 
@@ -105,12 +106,15 @@ async function chat({
 }
 
 export function UnderstandYourBody() {
+  const memory = useExperienceMemory();
   const [topicId, setTopicId] = useSessionState<BodyTopicId>("hg.body.topic", "injectables");
   const topic = TOPICS.find((t) => t.id === topicId) ?? TOPICS[0];
 
   const [personaId, setPersonaId] = useSessionState<PersonaId>("hg.body.persona", topic.personaId);
   React.useEffect(() => {
     setPersonaId(topic.personaId);
+    memory.trackTopic(`understand:${topicId}`);
+    memory.trackPersona(topic.personaId);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [topicId]);
 

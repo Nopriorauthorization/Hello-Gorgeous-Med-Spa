@@ -11,6 +11,7 @@ import { PAIN_RECOVERY } from "./pain-recovery";
 import { AFTERCARE } from "./aftercare";
 import { SAFETY } from "./safety";
 import { EXPECTATIONS } from "./expectations";
+import { COMPARISONS } from "./comparisons";
 
 export type { KnowledgeEntry, KnowledgeDomain } from "./types";
 
@@ -26,6 +27,7 @@ export const LOCAL_KNOWLEDGE_LIBRARY: readonly KnowledgeEntry[] = [
   ...AFTERCARE,
   ...SAFETY,
   ...EXPECTATIONS,
+  ...COMPARISONS,
 ] as const;
 
 export const KNOWLEDGE_LIBRARY_VERSION = 1;

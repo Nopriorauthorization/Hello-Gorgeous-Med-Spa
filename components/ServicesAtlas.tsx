@@ -19,6 +19,7 @@ import {
   type DiscoveryOptionId,
   type ServiceAtlasClusterId,
 } from "@/lib/services-atlas";
+import { useExperienceMemory } from "@/lib/memory/hooks";
 
 type Msg = { role: "user" | "assistant"; content: string };
 
@@ -195,6 +196,7 @@ function ServiceCard({
   commitment,
   defaultPersona,
   onTalk,
+  onViewed,
 }: {
   slug: string;
   name: string;
@@ -206,6 +208,7 @@ function ServiceCard({
   commitment: string;
   defaultPersona: PersonaId;
   onTalk: (personaId: PersonaId, prompt: string) => void;
+  onViewed: (serviceSlug: string) => void;
 }) {
   const [open, setOpen] = React.useState(false);
   return (
@@ -258,6 +261,7 @@ function ServiceCard({
       <div className="mt-6 flex flex-col sm:flex-row gap-3">
         <Link
           href={`/services/${slug}`}
+          onClick={() => onViewed(slug)}
           className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full text-sm font-semibold border border-white/20 text-white hover:bg-white/5 transition"
         >
           View details
@@ -457,6 +461,7 @@ function ChatModal({
 }
 
 export function ServicesAtlas() {
+  const memory = useExperienceMemory();
   const [selected, setSelected] = useSessionState<DiscoveryOptionId | null>("hg.atlas.discovery", null);
   const option = selected ? DISCOVERY_OPTIONS.find((o) => o.id === selected) : null;
 
@@ -477,6 +482,11 @@ export function ServicesAtlas() {
     setChatPersona(personaId);
     setChatPrompt(prompt);
     setChatOpen(true);
+    memory.trackPersona(personaId);
+  }
+
+  function trackService(slug: string) {
+    memory.trackService(slug);
   }
 
   return (
@@ -518,7 +528,11 @@ export function ServicesAtlas() {
                 <button
                   key={o.id}
                   type="button"
-                  onClick={() => setSelected(o.id)}
+                  onClick={() => {
+                    setSelected(o.id);
+                    memory.setPreference({ stage: "learning" });
+                    memory.trackTopic(`discovery:${o.id}`);
+                  }}
                   className={cx(
                     "text-left rounded-2xl border bg-gradient-to-b from-gray-950/60 to-black p-5 transition",
                     active ? "border-pink-500/40" : "border-gray-800 hover:border-white/20",
@@ -613,6 +627,7 @@ export function ServicesAtlas() {
                         commitment={c.commitment}
                         defaultPersona={c.defaultPersona}
                         onTalk={openTalk}
+                        onViewed={trackService}
                       />
                     ))}
                   </div>

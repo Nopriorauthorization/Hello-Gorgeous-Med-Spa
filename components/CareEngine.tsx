@@ -32,6 +32,7 @@ import {
   type TimelineTreatment,
   type BeautyPriority,
 } from "@/lib/care-modules";
+import { useExperienceMemory } from "@/lib/memory/hooks";
 
 type Msg = { role: "user" | "assistant"; content: string };
 
@@ -113,6 +114,7 @@ async function chat({
 }
 
 export function CareEngine() {
+  const memory = useExperienceMemory();
   const [module, setModule] = React.useState<CareModuleId>("education");
   const [personaId, setPersonaId] = React.useState<PersonaId>(DEFAULT_PERSONA_ID);
 
@@ -164,6 +166,7 @@ export function CareEngine() {
 
   // Module-driven defaults (keeps persona + UX predictable)
   React.useEffect(() => {
+    memory.trackTopic(`care-engine:module:${module}`);
     if (module === "confidence-check") setPersonaId("peppi");
     if (module === "timeline-simulator") {
       const scenario = getTimelineScenario(tlTreatment);
@@ -172,6 +175,11 @@ export function CareEngine() {
     if (module === "beauty-roadmap") setPersonaId("founder");
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [module, tlTreatment]);
+
+  React.useEffect(() => {
+    memory.trackPersona(personaId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [personaId]);
 
   async function sendEducation() {
     const text = eduInput.trim();
