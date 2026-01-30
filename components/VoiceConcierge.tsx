@@ -258,13 +258,14 @@ export function VoiceConcierge() {
     setResponse("");
     setRecommendations([]);
 
-    if (!("webkitSpeechRecognition" in window) && !("SpeechRecognition" in window)) {
+    const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
+    
+    if (!SpeechRecognitionAPI) {
       setError("Voice recognition is not supported in your browser. Please try Chrome.");
       return;
     }
 
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    const recognition = new SpeechRecognition();
+    const recognition = new SpeechRecognitionAPI();
     
     recognition.continuous = false;
     recognition.interimResults = true;
