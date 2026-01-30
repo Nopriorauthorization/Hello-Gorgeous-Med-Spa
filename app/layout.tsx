@@ -5,6 +5,7 @@ import "./globals.css";
 import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
 import { StickyMobileCTA } from "@/components/StickyMobileCTA";
+import { MascotChat } from "@/components/MascotChat";
 import { SITE } from "@/lib/seo";
 
 const inter = Inter({
@@ -53,6 +54,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           </div>
         </main>
         <StickyMobileCTA />
+        <MascotChat />
       </body>
     </html>
   );
