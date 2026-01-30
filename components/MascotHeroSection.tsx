@@ -47,7 +47,7 @@ const mascotHeroData: MascotHeroData[] = [
   {
     id: "filla-grace",
     characterImage: "/images/characters/filla-grace.png",
-    videoSrc: "/videos/mascots/filla-grace/filla-grace-intro.mp4",
+    videoSrc: null, // Video not available yet
     features: [
       { icon: "✨", title: "Filler Types", description: "Understanding different filler options" },
       { icon: "🎭", title: "Facial Harmony", description: "Balance and natural enhancement" },
