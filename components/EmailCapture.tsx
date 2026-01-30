@@ -40,12 +40,21 @@ export function EmailCapture() {
 
     setStatus("loading");
 
-    // Simulate API call - replace with your actual email service
-    // Examples: Mailchimp, ConvertKit, SendGrid, etc.
     try {
-      // For now, we'll just store locally and show success
-      // In production, you'd send to your email service API
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      const res = await fetch("/api/subscribe", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+          email: email.trim(),
+          source: "popup-10off" 
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to subscribe");
+      }
       
       localStorage.setItem("email-subscribed", email);
       setStatus("success");
@@ -187,9 +196,20 @@ export function EmailBanner() {
     if (!email.trim() || status === "loading") return;
 
     setStatus("loading");
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    localStorage.setItem("email-subscribed", email);
-    setStatus("success");
+    try {
+      await fetch("/api/subscribe", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+          email: email.trim(),
+          source: "homepage-banner" 
+        }),
+      });
+      localStorage.setItem("email-subscribed", email);
+      setStatus("success");
+    } catch {
+      setStatus("idle");
+    }
   };
 
   if (status === "success") {
