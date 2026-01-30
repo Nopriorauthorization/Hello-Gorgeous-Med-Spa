@@ -6,6 +6,7 @@ import { PromoBanner } from "@/components/PromoBanner";
 import { PhotoGallery } from "@/components/PhotoGallery";
 import { MeetProviders } from "@/components/MeetProviders";
 import { PartnersGrid } from "@/components/PartnersGrid";
+import { GiftCardBanner } from "@/components/GiftCardBanner";
 import { HOME_FAQS, faqJsonLd, pageMetadata, siteJsonLd } from "@/lib/seo";
 
 export const metadata: Metadata = pageMetadata({
@@ -29,6 +30,7 @@ export default function HomePage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd(HOME_FAQS)) }}
       />
       <Hero />
+      <GiftCardBanner />
       <PromoBanner />
       <HomeCareTeam />
       <PartnersGrid />
