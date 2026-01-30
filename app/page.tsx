@@ -5,6 +5,7 @@ import { HomeCareTeam } from "@/components/HomeCareTeam";
 import { PromoBanner } from "@/components/PromoBanner";
 import { PhotoGallery } from "@/components/PhotoGallery";
 import { MeetProviders } from "@/components/MeetProviders";
+import { PartnersGrid } from "@/components/PartnersGrid";
 import { HOME_FAQS, faqJsonLd, pageMetadata, siteJsonLd } from "@/lib/seo";
 
 export const metadata: Metadata = pageMetadata({
@@ -30,6 +31,7 @@ export default function HomePage() {
       <Hero />
       <PromoBanner />
       <HomeCareTeam />
+      <PartnersGrid />
       <PhotoGallery />
       <MeetProviders />
     </>
