@@ -8,6 +8,7 @@ import { MeetProviders } from "@/components/MeetProviders";
 import { PartnersGrid } from "@/components/PartnersGrid";
 import { Testimonials } from "@/components/Testimonials";
 import { LocationMap } from "@/components/LocationMap";
+import { AnteAGEShowcase } from "@/components/AnteAGEShowcase";
 import { HOME_FAQS, faqJsonLd, pageMetadata, siteJsonLd } from "@/lib/seo";
 
 export const metadata: Metadata = pageMetadata({
@@ -33,6 +34,7 @@ export default function HomePage() {
       <Hero />
       <OffersSection />
       <HomeCareTeam />
+      <AnteAGEShowcase />
       <Testimonials />
       <PartnersGrid />
       <PhotoGallery />

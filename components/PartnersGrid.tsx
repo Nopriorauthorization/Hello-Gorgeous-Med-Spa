@@ -27,14 +27,6 @@ const partners = [
     link: "https://fresha.com/book-now/hello-gorgeous-tallrfb5/services?lid=102610&share=true&pId=95245",
     cta: "Book Treatment",
   },
-  {
-    name: "AnteAGE MD",
-    description: "Brightening Exosomes for radiant skin.",
-    highlight: "Safe for all skin types • Regenerative science",
-    image: "/images/partners/anteage.png",
-    link: "https://fresha.com/book-now/hello-gorgeous-tallrfb5/services?lid=102610&share=true&pId=95245",
-    cta: "Learn More",
-  },
 ];
 
 export function PartnersGrid() {
