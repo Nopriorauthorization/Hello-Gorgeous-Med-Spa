@@ -10,9 +10,9 @@ import { BOOKING_URL } from "@/lib/flows";
 
 const nav = [
   { href: "/", label: "Home", icon: "🏠" },
-  { href: "/services", label: "Services", icon: "✨" },
-  { href: "/iv-therapy", label: "IV Therapy", icon: "💉" },
-  { href: "/telehealth", label: "Telehealth", icon: "🖥️", highlight: true },
+  { href: "/quiz", label: "Find My Treatment", icon: "✨", highlight: true },
+  { href: "/services", label: "Services", icon: "💉" },
+  { href: "/telehealth", label: "Telehealth", icon: "🖥️" },
   { href: "/shop", label: "Shop", icon: "🛍️" },
   { href: "/blog", label: "Blog", icon: "📚" },
   { href: "/contact", label: "Contact", icon: "📍" },

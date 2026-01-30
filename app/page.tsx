@@ -15,6 +15,7 @@ import { BioteSection } from "@/components/BioteSection";
 import { EmailBanner } from "@/components/EmailCapture";
 import { BotoxCalculator } from "@/components/BotoxCalculator";
 import { VirtualTryOn } from "@/components/VirtualTryOn";
+import { QuizCTA } from "@/components/QuizCTA";
 import { HOME_FAQS, SITE, faqJsonLd, pageMetadata, siteJsonLd, breadcrumbJsonLd } from "@/lib/seo";
 
 export const metadata: Metadata = pageMetadata({
@@ -47,6 +48,7 @@ export default function HomePage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd(homeBreadcrumbs)) }}
       />
       <Hero />
+      <QuizCTA />
       <OffersSection />
       <BotoxCalculator />
       <VirtualTryOn />
