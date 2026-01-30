@@ -51,15 +51,6 @@
   color: white;
 }
 
-.chatbotLink {
-  background: rgba(255, 255, 255, 0.2) !important;
-  border: 1px solid rgba(255, 255, 255, 0.3);
-}
-
-.chatbotLink:hover {
-  background: rgba(255, 255, 255, 0.3) !important;
-}
-
 @media (max-width: 768px) {
   .headerContent {
     flex-direction: column;

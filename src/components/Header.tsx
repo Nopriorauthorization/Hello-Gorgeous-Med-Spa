@@ -21,11 +21,6 @@ const Header: React.FC = () => {
                         <li>
                             <Link href="/contact">Contact</Link>
                         </li>
-                        <li>
-                            <Link href="/chatbot" className={styles.chatbotLink}>
-                                Chat with Mascots
-                            </Link>
-                        </li>
                     </ul>
                 </nav>
             </div>
