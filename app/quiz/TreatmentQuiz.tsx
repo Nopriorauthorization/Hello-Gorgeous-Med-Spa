@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
 import { FadeUp, Section } from "@/components/Section";
 
 type Answer = {
@@ -303,7 +302,7 @@ export function TreatmentQuiz() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, source: "treatment-quiz" }),
       });
-    } catch (e) {
+    } catch {
       // Ignore errors, still show results
     }
     

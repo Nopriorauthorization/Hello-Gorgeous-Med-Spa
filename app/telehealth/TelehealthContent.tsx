@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
 import { FadeUp, Section } from "@/components/Section";
 
 const telehealthServices = [
@@ -111,13 +110,11 @@ const faqs = [
   },
 ];
 
-// Placeholder - replace with actual Doxy.me room URL once created
-const TELEHEALTH_URL = "https://doxy.me/hellogorgeousmedspa";
 const BOOKING_URL = "https://fresha.com/book-now/hello-gorgeous-tallrfb5/services?lid=102610&share=true&pId=95245";
+// Doxy.me room URL - update once created: https://doxy.me/hellogorgeousmedspa
 
 export function TelehealthContent() {
   const [expandedFaq, setExpandedFaq] = useState<number | null>(null);
-  const [selectedService, setSelectedService] = useState<typeof telehealthServices[0] | null>(null);
 
   return (
     <>
