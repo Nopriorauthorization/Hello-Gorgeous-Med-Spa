@@ -10,6 +10,7 @@ import { Testimonials } from "@/components/Testimonials";
 import { LocationMap } from "@/components/LocationMap";
 import { AnteAGEShowcase } from "@/components/AnteAGEShowcase";
 import { PharmacyShowcase } from "@/components/PharmacyShowcase";
+import { FullscriptSection } from "@/components/FullscriptSection";
 import { HOME_FAQS, faqJsonLd, pageMetadata, siteJsonLd } from "@/lib/seo";
 
 export const metadata: Metadata = pageMetadata({
@@ -36,6 +37,7 @@ export default function HomePage() {
       <OffersSection />
       <HomeCareTeam />
       <PharmacyShowcase />
+      <FullscriptSection />
       <AnteAGEShowcase />
       <Testimonials />
       <PartnersGrid />
