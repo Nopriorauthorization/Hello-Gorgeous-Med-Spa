@@ -12,6 +12,7 @@ import { AnteAGEShowcase } from "@/components/AnteAGEShowcase";
 import { PharmacyShowcase } from "@/components/PharmacyShowcase";
 import { FullscriptSection } from "@/components/FullscriptSection";
 import { BioteSection } from "@/components/BioteSection";
+import { EmailBanner } from "@/components/EmailCapture";
 import { HOME_FAQS, faqJsonLd, pageMetadata, siteJsonLd } from "@/lib/seo";
 
 export const metadata: Metadata = pageMetadata({
@@ -45,6 +46,7 @@ export default function HomePage() {
       <PartnersGrid />
       <PhotoGallery />
       <MeetProviders />
+      <EmailBanner />
       <LocationMap />
     </>
   );
