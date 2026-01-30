@@ -241,6 +241,7 @@ const treatments: Treatment[] = [
 const BOOKING_URL = "https://fresha.com/book-now/hello-gorgeous-tallrfb5/services?lid=102610&share=true&pId=95245";
 
 export function TreatmentQuiz() {
+  const [started, setStarted] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string[]>>({});
   const [showResults, setShowResults] = useState(false);
@@ -352,7 +353,7 @@ export function TreatmentQuiz() {
   const recommendations = showResults ? getRecommendations() : [];
 
   // Start screen
-  if (currentStep === 0 && Object.keys(answers).length === 0 && !showResults) {
+  if (!started && !showResults) {
     return (
       <>
         <Section className="relative py-20 bg-gradient-to-b from-pink-950/30 via-purple-950/20 to-black overflow-hidden min-h-screen flex items-center">
@@ -392,7 +393,7 @@ export function TreatmentQuiz() {
                 
                 <button
                   type="button"
-                  onClick={() => setCurrentStep(0)}
+                  onClick={() => setStarted(true)}
                   className="px-12 py-5 rounded-2xl bg-gradient-to-r from-pink-500 to-purple-500 text-white font-bold text-xl hover:opacity-90 transition transform hover:scale-105"
                 >
                   Start Quiz →
@@ -592,6 +593,7 @@ export function TreatmentQuiz() {
             <button
               type="button"
               onClick={() => {
+                setStarted(false);
                 setAnswers({});
                 setCurrentStep(0);
                 setShowResults(false);
