@@ -9,6 +9,7 @@ import { MascotChat } from "@/components/MascotChat";
 import { EmailCapture } from "@/components/EmailCapture";
 import { VoiceConcierge } from "@/components/VoiceConcierge";
 import { SITE, organizationJsonLd } from "@/lib/seo";
+import { ImmediateCareStrip } from "@/components/ImmediateCareBanner";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -109,6 +110,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
       </head>
       <body className="bg-black text-white min-h-screen antialiased">
+        <ImmediateCareStrip />
         <Header />
         <main className="pt-16">
           <div className="min-h-screen bg-black text-white overflow-x-hidden pb-20 md:pb-0">

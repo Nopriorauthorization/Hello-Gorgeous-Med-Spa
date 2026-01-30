@@ -16,6 +16,7 @@ import { EmailBanner } from "@/components/EmailCapture";
 import { BotoxCalculator } from "@/components/BotoxCalculator";
 import { VirtualTryOn } from "@/components/VirtualTryOn";
 import { QuizCTA } from "@/components/QuizCTA";
+import { ImmediateCareBanner } from "@/components/ImmediateCareBanner";
 import { HOME_FAQS, SITE, faqJsonLd, pageMetadata, siteJsonLd, breadcrumbJsonLd } from "@/lib/seo";
 
 export const metadata: Metadata = pageMetadata({
@@ -58,6 +59,7 @@ export default function HomePage() {
       <BioteSection />
       <AnteAGEShowcase />
       <Testimonials />
+      <ImmediateCareBanner />
       <PartnersGrid />
       <PhotoGallery />
       <MeetProviders />
