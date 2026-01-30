@@ -1,0 +1,85 @@
+.header {
+  background: linear-gradient(135deg, #d4597a 0%, #e8849b 100%);
+  padding: 0 20px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.headerContent {
+  max-width: 1400px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 70px;
+}
+
+.title {
+  font-size: 1.5rem;
+  color: white;
+  margin: 0;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+}
+
+.nav ul {
+  display: flex;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  gap: 8px;
+}
+
+.nav li {
+  margin: 0;
+}
+
+.nav a {
+  display: block;
+  padding: 10px 18px;
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: 500;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  font-size: 0.95rem;
+}
+
+.nav a:hover {
+  background: rgba(255, 255, 255, 0.15);
+  color: white;
+}
+
+.chatbotLink {
+  background: rgba(255, 255, 255, 0.2) !important;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.chatbotLink:hover {
+  background: rgba(255, 255, 255, 0.3) !important;
+}
+
+@media (max-width: 768px) {
+  .headerContent {
+    flex-direction: column;
+    height: auto;
+    padding: 16px 0;
+    gap: 12px;
+  }
+
+  .title {
+    font-size: 1.25rem;
+  }
+
+  .nav ul {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 4px;
+  }
+
+  .nav a {
+    padding: 8px 12px;
+    font-size: 0.85rem;
+  }
+}
