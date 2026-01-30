@@ -84,7 +84,7 @@ export function Testimonials() {
                   </span>
                 </div>
                 <StarRating rating={testimonial.rating} />
-                <p className="mt-4 text-gray-300 leading-relaxed">"{testimonial.text}"</p>
+                <p className="mt-4 text-gray-300 leading-relaxed">&ldquo;{testimonial.text}&rdquo;</p>
               </div>
             </FadeUp>
           ))}
@@ -104,7 +104,7 @@ export function Testimonials() {
                 </span>
               </div>
               <StarRating rating={testimonials[activeIndex].rating} />
-              <p className="mt-4 text-gray-300 leading-relaxed">"{testimonials[activeIndex].text}"</p>
+              <p className="mt-4 text-gray-300 leading-relaxed">&ldquo;{testimonials[activeIndex].text}&rdquo;</p>
             </div>
 
             {/* Dots */}

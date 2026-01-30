@@ -99,7 +99,7 @@ export function FullscriptSection() {
                     Share Your Supplements
                   </h3>
                   <p className="text-white/70 mb-6 flex-1">
-                    Already taking supplements? Let us know what you're currently using 
+                    Already taking supplements? Let us know what you&apos;re currently using 
                     so we can provide better, personalized care.
                   </p>
 
