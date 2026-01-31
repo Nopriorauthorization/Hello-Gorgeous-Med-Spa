@@ -592,37 +592,38 @@ export function useServicesWithStats() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    async function fetchServices() {
-      if (!isSupabaseConfigured()) {
-        setServices([]);
-        setLoading(false);
-        return;
-      }
-
-      try {
-        const { data, error: fetchError } = await supabase
-          .from('services')
-          .select(`
-            *,
-            category:categories(id, name)
-          `)
-          .order('name');
-
-        if (fetchError) throw fetchError;
-        setServices(data || []);
-      } catch (err) {
-        console.error('Error fetching services:', err);
-        setError(err instanceof Error ? err.message : 'Failed to fetch services');
-      } finally {
-        setLoading(false);
-      }
+  const fetchServices = async () => {
+    if (!isSupabaseConfigured()) {
+      setServices([]);
+      setLoading(false);
+      return;
     }
 
+    try {
+      setLoading(true);
+      const { data, error: fetchError } = await supabase
+        .from('services')
+        .select(`
+          *,
+          category:service_categories(id, name)
+        `)
+        .order('name');
+
+      if (fetchError) throw fetchError;
+      setServices(data || []);
+    } catch (err) {
+      console.error('Error fetching services:', err);
+      setError(err instanceof Error ? err.message : 'Failed to fetch services');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchServices();
   }, []);
 
-  return { services, loading, error };
+  return { services, loading, error, refetch: fetchServices };
 }
 
 // ============================================================
