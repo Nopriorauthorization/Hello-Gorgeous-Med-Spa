@@ -103,6 +103,9 @@ export * from './appointment-statuses';
 
 // Export blocked time types
 export * from './blocked-time';
+
+// Export calendar settings
+export * from './calendar-settings';
 export * from './referrals';
 
 // Export reminders
