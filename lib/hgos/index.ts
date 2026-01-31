@@ -97,6 +97,9 @@ export * from './types-inventory';
 
 // Export loyalty & referrals
 export * from './loyalty';
+
+// Export appointment statuses
+export * from './appointment-statuses';
 export * from './referrals';
 
 // Export reminders
