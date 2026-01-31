@@ -87,7 +87,7 @@ export default function AdminLayout({
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 admin-panel">
       {/* Top Header */}
       <AdminHeader />
 
@@ -97,7 +97,7 @@ export default function AdminLayout({
           <nav className="p-3 space-y-4">
             {NAV_SECTIONS.map((section) => (
               <div key={section.title}>
-                <h3 className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1 px-3">
+                <h3 className="text-[10px] font-bold text-gray-600 uppercase tracking-wider mb-1 px-3">
                   {section.title}
                 </h3>
                 <ul className="space-y-0.5">
@@ -124,7 +124,7 @@ export default function AdminLayout({
 
             {/* Quick Links */}
             <div className="pt-4 border-t border-gray-100">
-              <h3 className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1 px-3">
+              <h3 className="text-[10px] font-bold text-gray-600 uppercase tracking-wider mb-1 px-3">
                 Quick Links
               </h3>
               <ul className="space-y-0.5">
@@ -147,9 +147,9 @@ export default function AdminLayout({
 
           {/* Version Footer - Dynamic */}
           <div className="absolute bottom-0 left-0 right-0 p-3 border-t border-gray-100 bg-white">
-            <div className="text-xs text-gray-400 text-center">
-              <p className="font-medium text-gray-600">Hello Gorgeous OS</p>
-              <p>v1.3.0 • Development</p>
+            <div className="text-xs text-gray-500 text-center">
+              <p className="font-medium text-gray-700">Hello Gorgeous OS</p>
+              <p>v1.4.0 • Production</p>
             </div>
           </div>
         </aside>

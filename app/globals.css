@@ -11,6 +11,59 @@ body {
   text-rendering: optimizeLegibility;
 }
 
+/* ============================================================
+   ADMIN PANEL TEXT VISIBILITY FIX
+   Make all admin interface text darker and more readable
+   ============================================================ */
+
+/* Force darker input text - applies to all form inputs */
+input, 
+textarea, 
+select {
+  color: #111827 !important; /* gray-900 */
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: #9ca3af !important; /* gray-400 - lighter than typed text */
+}
+
+/* Admin-specific darker text overrides */
+.admin-panel input,
+.admin-panel textarea,
+.admin-panel select {
+  color: #111827 !important;
+  font-weight: 500;
+}
+
+/* Fix light gray labels and descriptions in admin */
+[class*="text-gray-300"],
+[class*="text-gray-400"] {
+  --tw-text-opacity: 1;
+}
+
+/* Ensure table text is readable */
+table td,
+table th {
+  color: #374151; /* gray-700 minimum */
+}
+
+/* Better contrast for stat cards */
+.stat-label {
+  color: #4b5563 !important; /* gray-600 */
+  font-weight: 500;
+}
+
+/* Override any faded text in admin areas */
+main input,
+main textarea,
+main select,
+aside input,
+aside textarea,
+aside select {
+  color: #111827 !important;
+}
+
 ::selection {
   background: rgba(255, 45, 149, 0.25);
 }
