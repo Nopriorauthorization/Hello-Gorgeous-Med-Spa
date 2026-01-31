@@ -256,7 +256,7 @@ export const HGOS_CONFIG = {
     state: 'IL',
     zip: '60543',
     phone: '630-636-6193',
-    email: 'hello@hellogorgeousmedspa.com',
+    email: 'hello.gorgeous@hellogorgeousmedspa.com',
     timezone: 'America/Chicago',
   },
 } as const;

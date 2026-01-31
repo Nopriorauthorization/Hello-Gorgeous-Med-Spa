@@ -276,7 +276,7 @@ export default function PrivacyPolicyPage() {
             74 W. Washington St<br />
             Oswego, IL 60543<br />
             Phone: (630) 636-6193<br />
-            Email: hellogorgeousskin@yahoo.com
+            Email: hello.gorgeous@hellogorgeousmedspa.com
           </address>
           <p className="mb-0 mt-4 text-sm">
             <strong>HHS Office for Civil Rights:</strong><br />

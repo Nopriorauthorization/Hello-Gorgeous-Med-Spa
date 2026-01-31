@@ -9,7 +9,7 @@ const ADDRESS = {
   zip: "60543",
   full: "74 W. Washington St, Oswego, IL 60543",
   phone: "630-636-6193",
-  email: "hello@hellogorgeousmedspa.com",
+  email: "hello.gorgeous@hellogorgeousmedspa.com",
 };
 
 // Google Maps embed URL (encoded address)

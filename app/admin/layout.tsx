@@ -33,6 +33,7 @@ const NAV_SECTIONS = [
     items: [
       { href: '/admin/charts', label: 'Charts & SOAP', icon: '📋', description: 'Clinical notes' },
       { href: '/admin/consents', label: 'Consents', icon: '📝', description: 'Digital signatures' },
+      { href: '/admin/compliance', label: 'Compliance', icon: '🛡️', description: 'Legal & safety' },
       { href: '/admin/medications', label: 'Medications', icon: '💊', description: 'Rx tracking' },
       { href: '/admin/inventory', label: 'Inventory', icon: '📦', description: 'Products & lots' },
     ],
@@ -50,6 +51,7 @@ const NAV_SECTIONS = [
     title: 'Growth',
     items: [
       { href: '/admin/marketing', label: 'Marketing', icon: '📣', description: 'Campaigns' },
+      { href: '/admin/sms', label: 'SMS Campaigns', icon: '💬', description: 'Text blasts' },
       { href: '/admin/reports', label: 'Reports', icon: '📈', description: 'Analytics' },
     ],
   },
@@ -59,6 +61,7 @@ const NAV_SECTIONS = [
       { href: '/admin/staff', label: 'Staff', icon: '👤', description: 'Team members' },
       { href: '/admin/users', label: 'Users & Access', icon: '🔐', description: 'Permissions' },
       { href: '/admin/vendors', label: 'Vendors', icon: '🏢', description: 'Suppliers' },
+      { href: '/admin/fax', label: 'eFax', icon: '📠', description: 'Send/receive faxes' },
       { href: '/admin/settings', label: 'Settings', icon: '⚙️', description: 'Configuration' },
     ],
   },
