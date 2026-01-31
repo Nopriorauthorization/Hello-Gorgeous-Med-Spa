@@ -2,16 +2,18 @@
 
 // ============================================================
 // ADD NEW CLIENT PAGE
-// Create a new client record
+// Create a new client record - SAVES TO DATABASE
 // ============================================================
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { createBrowserSupabaseClient } from '@/lib/hgos/supabase';
 
 export default function NewClientPage() {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -30,6 +32,8 @@ export default function NewClientPage() {
     sendWelcomeEmail: true,
   });
 
+  const supabase = createBrowserSupabaseClient();
+
   const updateField = (field: string, value: any) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
@@ -37,13 +41,54 @@ export default function NewClientPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
+    setError(null);
 
-    // TODO: Save to Supabase
-    // For now, simulate save
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    try {
+      // 1. Create user record
+      const { data: user, error: userError } = await supabase
+        .from('users')
+        .insert({
+          first_name: formData.firstName,
+          last_name: formData.lastName,
+          email: formData.email.toLowerCase(),
+          phone: formData.phone,
+          role: 'client',
+        })
+        .select('id')
+        .single();
 
-    alert('Client created successfully!');
-    router.push('/admin/clients');
+      if (userError) {
+        throw new Error(userError.message);
+      }
+
+      // 2. Create client record linked to user
+      const { error: clientError } = await supabase
+        .from('clients')
+        .insert({
+          user_id: user.id,
+          date_of_birth: formData.dateOfBirth || null,
+          gender: formData.gender || null,
+          address_line1: formData.address || null,
+          city: formData.city || null,
+          state: formData.state || null,
+          postal_code: formData.zip || null,
+          emergency_contact_name: formData.emergencyContactName || null,
+          emergency_contact_phone: formData.emergencyContactPhone || null,
+          referral_source: formData.referralSource || null,
+          internal_notes: formData.notes || null,
+        });
+
+      if (clientError) {
+        throw new Error(clientError.message);
+      }
+
+      router.push('/admin/clients');
+    } catch (err) {
+      console.error('Error creating client:', err);
+      setError(err instanceof Error ? err.message : 'Failed to create client');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -61,6 +106,13 @@ export default function NewClientPage() {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Error Display */}
+        {error && (
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+            {error}
+          </div>
+        )}
+
         {/* Basic Information */}
         <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
           <h2 className="font-semibold text-gray-900 mb-4">Basic Information</h2>

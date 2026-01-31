@@ -136,12 +136,11 @@ function NewAppointmentContent() {
         client_id: selectedClient.id,
         provider_id: formData.providerId,
         service_id: formData.serviceId,
-        scheduled_at: scheduledAt.toISOString(),
+        starts_at: scheduledAt.toISOString(),
         duration_minutes: selectedService?.duration_minutes || 30,
         notes: formData.notes,
       });
 
-      alert('Appointment booked successfully!');
       router.push('/admin/appointments');
     } catch (error) {
       console.error('Failed to create appointment:', error);

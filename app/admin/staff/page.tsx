@@ -356,14 +356,18 @@ export default function AdminStaffPage() {
                 Cancel
               </button>
               <button
-                onClick={() => {
-                  // TODO: Save to database
-                  alert('Changes saved! (Database integration pending)');
+                onClick={async () => {
+                  try {
+                    // Redirect to the database-connected provider management page
+                    window.location.href = '/admin/team/providers';
+                  } catch (err) {
+                    alert('Error - Please use Team > Providers for database management');
+                  }
                   setEditingStaff(null);
                 }}
                 className="px-4 py-2 bg-pink-500 text-white font-medium rounded-lg hover:bg-pink-600 transition-colors"
               >
-                Save Changes
+                Manage in Team Settings
               </button>
             </div>
           </div>
@@ -446,13 +450,12 @@ export default function AdminStaffPage() {
               </button>
               <button
                 onClick={() => {
-                  // TODO: Save to database
-                  alert('Staff member added! (Database integration pending)');
-                  setShowAddModal(false);
+                  // Redirect to the database-connected provider management page
+                  window.location.href = '/admin/team/providers';
                 }}
                 className="px-4 py-2 bg-pink-500 text-white font-medium rounded-lg hover:bg-pink-600 transition-colors"
               >
-                Add Team Member
+                Add in Team Settings
               </button>
             </div>
           </div>
