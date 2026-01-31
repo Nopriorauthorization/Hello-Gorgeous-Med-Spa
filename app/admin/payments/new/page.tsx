@@ -5,11 +5,11 @@
 // Process a new payment or sale
 // ============================================================
 
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 
-export default function NewPaymentPage() {
+function NewPaymentContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const appointmentId = searchParams.get('appointment');
@@ -321,5 +321,13 @@ export default function NewPaymentPage() {
         </div>
       </form>
     </div>
+  );
+}
+
+export default function NewPaymentPage() {
+  return (
+    <Suspense fallback={<div className="p-8 text-center">Loading...</div>}>
+      <NewPaymentContent />
+    </Suspense>
   );
 }

@@ -5,7 +5,7 @@
 // Book a new appointment
 // ============================================================
 
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 
@@ -42,7 +42,7 @@ const TIME_SLOTS = [
   '4:00 PM', '4:15 PM', '4:30 PM', '4:45 PM',
 ];
 
-export default function NewAppointmentPage() {
+function NewAppointmentContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const preselectedClient = searchParams.get('client');
@@ -374,5 +374,13 @@ export default function NewAppointmentPage() {
         )}
       </form>
     </div>
+  );
+}
+
+export default function NewAppointmentPage() {
+  return (
+    <Suspense fallback={<div className="p-8 text-center">Loading...</div>}>
+      <NewAppointmentContent />
+    </Suspense>
   );
 }
