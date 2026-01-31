@@ -8,6 +8,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/hgos/supabase';
 
 // Fallback provider data (used when database isn't populated)
+// Schedules match what's in Fresha
 const FALLBACK_PROVIDERS = [
   {
     id: 'danielle-001',
@@ -15,13 +16,13 @@ const FALLBACK_PROVIDERS = [
     title: 'Owner & Aesthetic Specialist',
     color: '#EC4899',
     schedule: {
-      0: null, // Sunday
-      1: { start: '11:00', end: '16:00' }, // Monday
-      2: { start: '11:00', end: '16:00' }, // Tuesday
-      3: null, // Wednesday
-      4: { start: '11:00', end: '16:00' }, // Thursday
-      5: { start: '11:00', end: '16:00' }, // Friday
-      6: null, // Saturday
+      0: null, // Sunday - OFF
+      1: { start: '11:00', end: '16:00' }, // Monday 11am-4pm
+      2: { start: '11:00', end: '16:00' }, // Tuesday 11am-4pm
+      3: null, // Wednesday - OFF
+      4: { start: '11:00', end: '16:00' }, // Thursday 11am-4pm
+      5: { start: '11:00', end: '16:00' }, // Friday 11am-4pm
+      6: null, // Saturday - OFF
     },
     serviceKeywords: ['lash', 'brow', 'facial', 'dermaplanning', 'hydra', 'peel', 'lamination', 'wax', 'extension', 'lift', 'tint', 'glow', 'geneo', 'frequency'],
   },
@@ -31,17 +32,42 @@ const FALLBACK_PROVIDERS = [
     title: 'APRN, FNP-BC',
     color: '#8B5CF6',
     schedule: {
-      0: null, // Sunday
-      1: { start: '10:00', end: '17:00' }, // Monday
-      2: { start: '10:00', end: '17:00' }, // Tuesday
-      3: { start: '10:00', end: '17:00' }, // Wednesday
-      4: null, // Thursday
-      5: { start: '10:00', end: '15:00' }, // Friday
-      6: null, // Saturday
+      0: null, // Sunday - OFF
+      1: { start: '10:00', end: '17:00' }, // Monday 10am-5pm
+      2: { start: '10:00', end: '17:00' }, // Tuesday 10am-5pm
+      3: { start: '10:00', end: '17:00' }, // Wednesday 10am-5pm
+      4: null, // Thursday - OFF
+      5: { start: '10:00', end: '15:00' }, // Friday 10am-3pm
+      6: null, // Saturday - OFF
     },
     serviceKeywords: ['botox', 'filler', 'jeuveau', 'dysport', 'lip', 'semaglutide', 'tirzepatide', 'retatrutide', 'weight', 'iv', 'vitamin', 'prp', 'pellet', 'hormone', 'bhrt', 'medical', 'trigger', 'kybella', 'consult', 'laser', 'ipl', 'photofacial', 'anteage'],
   },
 ];
+
+// Helper to fetch schedules from database for a provider
+async function getProviderScheduleFromDB(supabase: any, providerId: string): Promise<{ [day: number]: { start: string; end: string } | null }> {
+  const { data: schedules } = await supabase
+    .from('provider_schedules')
+    .select('*')
+    .eq('provider_id', providerId);
+
+  const schedule: { [day: number]: { start: string; end: string } | null } = {
+    0: null, 1: null, 2: null, 3: null, 4: null, 5: null, 6: null
+  };
+
+  if (schedules && schedules.length > 0) {
+    for (const s of schedules) {
+      if (s.is_working && s.start_time && s.end_time) {
+        schedule[s.day_of_week] = {
+          start: s.start_time.slice(0, 5),
+          end: s.end_time.slice(0, 5),
+        };
+      }
+    }
+  }
+
+  return schedule;
+}
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
