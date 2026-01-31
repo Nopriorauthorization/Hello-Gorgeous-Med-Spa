@@ -1,0 +1,128 @@
+import type { KnowledgeEntry } from "../types";
+
+export const WEIGHT_LOSS: readonly KnowledgeEntry[] = [
+  {
+    id: "weight-loss.metabolic-care-basics",
+    topic: "Weight loss & metabolic care — education-first overview",
+    category: "weight-loss",
+    explanation:
+      "Educationally, metabolic/weight care is about safe screening, realistic expectations, and ongoing monitoring. Some people explore medication-supported plans; individualized decisions require a medical consultation and evaluation.",
+    whatItHelpsWith: [
+      "Understanding what a consult typically covers (education)",
+      "Setting expectations for screening and monitoring",
+      "Reducing confusion before booking",
+    ],
+    whoItsFor: [
+      "People looking for education on clinician-guided weight care",
+      "People who want safety-first, non-judgmental guidance",
+    ],
+    whoItsNotFor: [
+      "Anyone seeking prescriptions online",
+      "Anyone seeking individualized eligibility decisions online",
+      "Anyone with urgent symptoms (seek urgent care)",
+    ],
+    commonQuestions: [
+      "What happens in a weight loss consultation?",
+      "Do I need labs?",
+      "What questions should I ask?",
+      "How do GLP‑1 medications work (high-level)?",
+    ],
+    safetyNotes: [
+      "No prescribing, dosing, or protocols online.",
+      "Eligibility depends on history, medications, and clinician evaluation.",
+      "Seek urgent care for severe symptoms.",
+    ],
+    escalationTriggers: ["chest pain", "shortness of breath", "severe abdominal pain", "pregnant", "breastfeeding"],
+    relatedTopics: ["comparisons.glp1-sema-vs-tirz-vs-reta", "safety.general-safety", "expectations.program-based-care"],
+    updatedAt: "2026-01-29T00:00:00.000Z",
+    version: 1,
+  },
+  {
+    id: "weight-loss.glp1-basics",
+    topic: "GLP‑1 medications — what they are (education)",
+    category: "weight-loss",
+    explanation:
+      "GLP‑1 medications are discussed in metabolic/weight contexts. Educationally, they can support appetite regulation and satiety signals. They are not a replacement for safety screening, lifestyle support, or clinician monitoring.",
+    whatItHelpsWith: ["Understanding appetite regulation vs willpower", "Reducing shame-based narratives"],
+    whoItsFor: ["People curious about GLP‑1 education", "People who want a calm, non-judgmental explanation"],
+    whoItsNotFor: ["Anyone seeking prescribing, dosing, or eligibility decisions online"],
+    commonQuestions: ["Is it just willpower?", "Will it fix my metabolism?", "Do I have to be on it forever?"],
+    safetyNotes: [
+      "No prescribing or dosing online.",
+      "Eligibility and monitoring are clinical decisions made in consult.",
+    ],
+    escalationTriggers: ["pregnant", "breastfeeding", "severe symptoms", "chest pain", "trouble breathing"],
+    relatedTopics: ["weight-loss.metabolic-care-basics", "expectations.program-based-care", "safety.general-safety"],
+    updatedAt: "2026-01-29T00:00:00.000Z",
+    version: 1,
+  },
+  {
+    id: "weight-loss.appetite-vs-willpower",
+    topic: "Appetite regulation vs willpower (education)",
+    category: "weight-loss",
+    explanation:
+      "Educationally, appetite and cravings are influenced by biology, sleep, stress, hormones, and environment—not just willpower. A good care plan reduces shame and focuses on sustainable habits and support.",
+    whatItHelpsWith: ["Emotional validation", "Reducing guilt", "Framing weight care as health support"],
+    whoItsFor: ["People who feel like they’ve ‘failed’ diets", "People seeking a kinder explanation"],
+    whoItsNotFor: ["Anyone seeking diagnosis of metabolic disease online"],
+    commonQuestions: ["Why am I hungry all the time?", "Why is it harder now?", "Is it my fault?"],
+    safetyNotes: ["Education only. Individual medical concerns require evaluation."],
+    escalationTriggers: ["eating disorder", "suicid", "severe symptoms"],
+    relatedTopics: ["weight-loss.metabolic-care-basics", "safety.general-safety"],
+    updatedAt: "2026-01-29T00:00:00.000Z",
+    version: 1,
+  },
+  {
+    id: "weight-loss.myths",
+    topic: "Weight loss myths (education)",
+    category: "weight-loss",
+    explanation:
+      "Common myths: 1) ‘If I just eat less, it will work.’ Biology adapts. 2) ‘Medication is cheating.’ Medical support can be appropriate and ethical when clinically indicated. 3) ‘Fast loss is best.’ Safe, sustainable progress is the goal.",
+    whatItHelpsWith: ["Reducing confusion", "Setting realistic expectations", "Ethical framing"],
+    whoItsFor: ["People anxious about stigma", "People who want a non-sales explanation"],
+    whoItsNotFor: ["Anyone seeking prescribing or dosing online"],
+    commonQuestions: ["Is it cheating?", "Will I gain it back?", "How fast is safe?"],
+    safetyNotes: ["No guarantees; individual response varies.", "Clinician oversight is required."],
+    escalationTriggers: ["pregnant", "breastfeeding", "severe symptoms"],
+    relatedTopics: ["expectations.program-based-care", "weight-loss.metabolic-care-basics"],
+    updatedAt: "2026-01-29T00:00:00.000Z",
+    version: 1,
+  },
+  {
+    id: "weight-loss.expectations",
+    topic: "Weight loss expectations & patience (education)",
+    category: "weight-loss",
+    explanation:
+      "Educationally, progress is rarely linear. Many people see changes in appetite and habits before they see big scale changes. The safest mindset is steady progress with monitoring and support, not an aggressive timeline.",
+    whatItHelpsWith: ["Setting expectations", "Reducing ‘is it working?’ anxiety"],
+    whoItsFor: ["People starting a program", "People who feel discouraged early on"],
+    whoItsNotFor: ["Anyone seeking outcome guarantees or personalized targets online"],
+    commonQuestions: ["When will I see results?", "Why is it slow?", "What if the scale stalls?"],
+    safetyNotes: ["Education only; individual plans require clinician guidance."],
+    escalationTriggers: ["severe symptoms", "fainting", "chest pain"],
+    relatedTopics: ["expectations.program-based-care", "weight-loss.metabolic-care-basics"],
+    updatedAt: "2026-01-29T00:00:00.000Z",
+    version: 1,
+  },
+  {
+    id: "comparisons.glp1-sema-vs-tirz-vs-reta",
+    topic: "Semaglutide vs Tirzepatide vs Retatrutide — education-only comparison",
+    category: "comparisons",
+    explanation:
+      "These names refer to medications people discuss in metabolic/weight contexts. Educationally, the most important differentiators are safety screening, monitoring, and whether something is appropriate and available in your clinical context. We do not choose or recommend a medication online.",
+    whatItHelpsWith: ["Understanding that selection is clinical", "Knowing what questions to ask in consult"],
+    whoItsFor: ["People trying to understand terms they’ve heard", "People who want a calm, non-sales overview"],
+    whoItsNotFor: ["Anyone seeking a prescription, dosing, or approval online"],
+    commonQuestions: ["Which is better?", "Is one stronger?", "Is retatrutide available?"],
+    safetyNotes: [
+      "No prescribing or dosing online.",
+      "Some options may be investigational or not appropriate for everyone.",
+      "Clinician evaluation is required.",
+    ],
+    escalationTriggers: ["pregnant", "breastfeeding", "severe symptoms", "allergic reaction"],
+    relatedTopics: ["weight-loss.metabolic-care-basics", "safety.general-safety"],
+    updatedAt: "2026-01-29T00:00:00.000Z",
+    version: 1,
+  },
+] as const;
+

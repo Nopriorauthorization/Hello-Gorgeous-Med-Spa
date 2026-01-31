@@ -1,0 +1,2 @@
+export const CARE_EXPERIENCE_ENABLED = process.env.NEXT_PUBLIC_CARE_EXPERIENCE !== "0";
+

@@ -4,10 +4,12 @@
   "description": "A beautiful medspa website",
   "main": "index.js",
   "scripts": {
+    "prebuild": "node scripts/sync-mascot-media.mjs",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint ."
+    "lint": "next lint",
+    "test": "npm run lint"
   },
   "keywords": [
     "medspa",
@@ -17,15 +19,24 @@
   "author": "Your Name",
   "license": "MIT",
   "dependencies": {
-    "next": "latest",
-    "react": "latest",
-    "react-dom": "latest"
+    "@supabase/ssr": "^0.8.0",
+    "@supabase/supabase-js": "^2.93.3",
+    "next": "^14.2.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "stripe": "^20.3.0"
   },
   "devDependencies": {
-    "eslint": "latest",
-    "eslint-config-next": "latest",
-    "typescript": "latest",
+    "@tailwindcss/typography": "^0.5.16",
+    "@types/node": "^20.4.2",
     "@types/react": "^18.2.21",
-    "@types/node": "^20.4.2"
+    "autoprefixer": "^10.4.20",
+    "dotenv": "^17.2.3",
+    "eslint": "^8.57.0",
+    "eslint-config-next": "^14.2.0",
+    "postcss": "^8.4.49",
+    "tailwindcss": "^3.4.17",
+    "typescript": "^5.3.3",
+    "xlsx": "^0.18.5"
   }
 }
