@@ -6,9 +6,41 @@
 
 'use client';
 
+import { useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { AdminHeader } from '@/components/AdminHeader';
+
+// Switch to admin manifest for PWA install
+function useAdminManifest() {
+  useEffect(() => {
+    // Find existing manifest link or create one
+    let manifestLink = document.querySelector('link[rel="manifest"]') as HTMLLinkElement;
+    const originalHref = manifestLink?.href;
+    
+    if (manifestLink) {
+      manifestLink.href = '/admin-manifest.json';
+    } else {
+      manifestLink = document.createElement('link');
+      manifestLink.rel = 'manifest';
+      manifestLink.href = '/admin-manifest.json';
+      document.head.appendChild(manifestLink);
+    }
+
+    // Set theme color for admin
+    let themeColor = document.querySelector('meta[name="theme-color"]') as HTMLMetaElement;
+    if (themeColor) {
+      themeColor.content = '#0f172a';
+    }
+
+    // Cleanup: restore original on unmount
+    return () => {
+      if (manifestLink && originalHref) {
+        manifestLink.href = originalHref;
+      }
+    };
+  }, []);
+}
 
 // Complete navigation matching Aesthetics Record parity requirements
 const NAV_SECTIONS = [
@@ -80,6 +112,9 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  
+  // Use admin manifest for PWA installation
+  useAdminManifest();
 
   const isActive = (href: string) => {
     if (href === '/admin') return pathname === '/admin';
