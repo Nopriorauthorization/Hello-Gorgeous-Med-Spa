@@ -153,6 +153,9 @@ export * from './daily-sales';
 // Export legal protection system
 export * from './legal-protection';
 
+// Export SMS marketing system
+export * from './sms-marketing';
+
 // Export audit logging
 export {
   logAuditEvent,

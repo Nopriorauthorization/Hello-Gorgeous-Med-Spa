@@ -15,7 +15,8 @@ export type ConsentFormType =
   | 'laser_consent'
   | 'weight_loss_consent'
   | 'chemical_peel_consent'
-  | 'microneedling_consent';
+  | 'microneedling_consent'
+  | 'sms_consent';
 
 export type ConsentStatus = 'pending' | 'signed' | 'declined' | 'expired';
 
@@ -719,6 +720,98 @@ export const CONSENT_FORMS: ConsentForm[] = [
       <p>I understand that the medication must be stored properly (refrigerated) and I will follow all storage instructions provided.</p>
       
       <p class="signature-block"><strong>BY SIGNING BELOW, I ACKNOWLEDGE THAT I HAVE READ AND UNDERSTAND THIS CONSENT FORM, INCLUDING THE BOXED WARNING ABOUT THYROID CANCER RISK, AND I VOLUNTARILY CONSENT TO MEDICAL WEIGHT LOSS TREATMENT.</strong></p>
+    `,
+  },
+
+  // ========================
+  // SMS/TEXT MESSAGE CONSENT (TCPA COMPLIANCE)
+  // ========================
+  {
+    id: 'sms_consent',
+    name: 'SMS/Text Message Consent',
+    shortName: 'SMS Consent',
+    description: 'Authorization to receive text messages for appointments and promotions',
+    version: '1.0',
+    lastUpdated: '2026-01-30',
+    isRequired: false, // Optional but needed for marketing
+    requiresWitness: false,
+    expiresAfterDays: null, // Never expires, but can be revoked
+    order: 15,
+    content: `
+      <h2>SMS/TEXT MESSAGE CONSENT FORM</h2>
+      <p class="clinic-name"><strong>Hello Gorgeous Med Spa</strong><br>74 W. Washington St, Oswego, IL 60543<br>(630) 636-6193</p>
+      
+      <div class="important-notice">
+        <strong>TELEPHONE CONSUMER PROTECTION ACT (TCPA) DISCLOSURE</strong>
+        <p>This consent is required by law before we can send you text messages. You have the right to decline and still receive our services.</p>
+      </div>
+      
+      <h3>1. CONSENT TO RECEIVE TEXT MESSAGES</h3>
+      <p>By signing below, I expressly consent to receive text messages (SMS and MMS) from Hello Gorgeous Med Spa at the phone number I have provided. I understand that:</p>
+      <ul>
+        <li>Message and data rates may apply based on my mobile carrier plan</li>
+        <li>I am not required to consent as a condition of purchasing any goods or services</li>
+        <li>I may receive approximately 2-8 messages per month</li>
+        <li>Messages may be sent using an automatic telephone dialing system</li>
+      </ul>
+      
+      <h3>2. TYPES OF MESSAGES</h3>
+      <p>I consent to receive the following types of text messages:</p>
+      
+      <p><strong>☐ TRANSACTIONAL MESSAGES (Required for appointment management)</strong></p>
+      <ul>
+        <li>Appointment confirmations and reminders</li>
+        <li>Appointment changes or cancellations</li>
+        <li>Important service updates</li>
+        <li>Billing and payment notifications</li>
+      </ul>
+      
+      <p><strong>☐ PROMOTIONAL MESSAGES (Optional)</strong></p>
+      <ul>
+        <li>Special offers and discounts</li>
+        <li>New service announcements</li>
+        <li>Seasonal promotions</li>
+        <li>Loyalty rewards and birthday offers</li>
+        <li>Event invitations</li>
+      </ul>
+      
+      <h3>3. HOW TO OPT-OUT</h3>
+      <p>You may revoke this consent at any time by:</p>
+      <ul>
+        <li><strong>Replying STOP</strong> to any text message you receive from us</li>
+        <li>Calling us at (630) 636-6193</li>
+        <li>Emailing hellogorgeousskin@yahoo.com with "Unsubscribe SMS" in the subject</li>
+        <li>Notifying us in person at your next appointment</li>
+      </ul>
+      <p>After opting out, you will receive one final confirmation message. You will no longer receive text messages unless you opt back in.</p>
+      
+      <h3>4. HOW TO GET HELP</h3>
+      <p>Reply <strong>HELP</strong> to any message for assistance, or contact us directly at (630) 636-6193.</p>
+      
+      <h3>5. MESSAGE FREQUENCY</h3>
+      <p>Message frequency varies. Transactional messages are sent as needed based on your appointments. Promotional messages are sent no more than 2 times per week.</p>
+      
+      <h3>6. PRIVACY</h3>
+      <p>Your phone number and messaging preferences are protected under our Privacy Policy. We will never sell your phone number to third parties. For more information, visit our Privacy Policy at hellogorgeousmedspa.com/privacy</p>
+      
+      <h3>7. SUPPORTED CARRIERS</h3>
+      <p>Text messaging is supported by most major carriers including AT&T, Verizon, T-Mobile, Sprint, and others. Carrier message and data rates may apply.</p>
+      
+      <h3>8. PHONE NUMBER VERIFICATION</h3>
+      <p>By providing my phone number below, I confirm that:</p>
+      <ul>
+        <li>The phone number I provided is my own</li>
+        <li>I am authorized to receive text messages at this number</li>
+        <li>I will notify Hello Gorgeous Med Spa if my phone number changes</li>
+      </ul>
+      
+      <p><strong>Phone Number for Text Messages:</strong> _______________________</p>
+      
+      <p class="signature-block"><strong>BY SIGNING BELOW, I ACKNOWLEDGE THAT I HAVE READ AND UNDERSTAND THIS SMS CONSENT FORM AND I VOLUNTARILY AGREE TO RECEIVE TEXT MESSAGES FROM HELLO GORGEOUS MED SPA.</strong></p>
+      
+      <p style="font-size: 10pt; color: #666; margin-top: 20px;">
+        <em>Note: If you do not sign this form, you may still receive essential appointment-related communications via phone call or email. Text messaging is optional but helps us serve you better.</em>
+      </p>
     `,
   },
 ];
