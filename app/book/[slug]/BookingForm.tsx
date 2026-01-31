@@ -4,6 +4,7 @@
 // PUBLIC BOOKING FORM COMPONENT
 // Collects client info and schedules appointment
 // With provider selection and schedule-based availability
+// Fetches providers from API (database-driven with fallback)
 // ============================================================
 
 import { useState, useEffect } from 'react';
@@ -28,7 +29,7 @@ interface Provider {
   bio?: string;
   color: string;
   schedule: {
-    [day: string]: { start: string; end: string } | null;
+    [day: number]: { start: string; end: string } | null;
   };
 }
 
@@ -36,78 +37,10 @@ interface Props {
   service: Service;
 }
 
-// Provider data - Danielle and Ryan with their schedules (from Fresha)
-const PROVIDERS: Provider[] = [
-  {
-    id: 'danielle-001',
-    name: 'Danielle Glazier-Alcala',
-    title: 'Owner & Aesthetic Specialist',
-    color: '#EC4899', // pink
-    schedule: {
-      // From Fresha: Mon-Tue 11am-4pm, Wed OFF, Thu-Fri 11am-4pm
-      monday: { start: '11:00', end: '16:00' },
-      tuesday: { start: '11:00', end: '16:00' },
-      wednesday: null, // Off Wednesdays
-      thursday: { start: '11:00', end: '16:00' },
-      friday: { start: '11:00', end: '16:00' },
-      saturday: null,
-      sunday: null,
-    },
-  },
-  {
-    id: 'ryan-001',
-    name: 'Ryan Kent',
-    title: 'APRN, FNP-BC',
-    color: '#8B5CF6', // purple
-    schedule: {
-      // From Fresha: Mon-Tue-Wed 10am-5pm, Thu OFF, Fri 10am-3pm
-      monday: { start: '10:00', end: '17:00' },
-      tuesday: { start: '10:00', end: '17:00' },
-      wednesday: { start: '10:00', end: '17:00' },
-      thursday: null, // Off Thursdays
-      friday: { start: '10:00', end: '15:00' },
-      saturday: null,
-      sunday: null,
-    },
-  },
-];
-
-// Services that only specific providers can do
-const PROVIDER_SERVICES: { [providerId: string]: string[] } = {
-  'danielle-001': [
-    // Danielle does: Lashes, Brows, Facials, Skincare
-    'lash', 'brow', 'facial', 'dermaplanning', 'hydra', 'chemical-peel', 
-    'glow2facial', 'geneo', 'lamination', 'wax', 'extension', 'lift', 'tint',
-    'high-frequency', 'anteage-microneedling', 'salmon', 'glass-glow'
-  ],
-  'ryan-001': [
-    // Ryan does: Injectables, Medical treatments, IV therapy, Weight loss
-    'botox', 'filler', 'jeuveau', 'dysport', 'lip', 'semaglutide', 'tirzepatide',
-    'retatrutide', 'weight', 'iv', 'vitamin', 'prp', 'pellet', 'hormone', 'bhrt',
-    'medical', 'trigger', 'kybella', 'consult', 'laser', 'ipl', 'photofacial'
-  ],
-};
-
-// Check if provider can do this service
-function canProviderDoService(provider: Provider, serviceSlug: string): boolean {
-  const providerKeywords = PROVIDER_SERVICES[provider.id] || [];
-  const slug = serviceSlug.toLowerCase();
-  
-  // Check if any keyword matches
-  return providerKeywords.some(keyword => slug.includes(keyword));
-}
-
-// Get available providers for a service
-function getProvidersForService(serviceSlug: string): Provider[] {
-  const eligible = PROVIDERS.filter(p => canProviderDoService(p, serviceSlug));
-  // If no specific match, both can do it (consultations, etc)
-  return eligible.length > 0 ? eligible : PROVIDERS;
-}
-
 // Generate time slots based on provider schedule
 function getTimeSlotsForProvider(provider: Provider, date: Date, duration: number): string[] {
-  const dayName = date.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
-  const schedule = provider.schedule[dayName];
+  const dayOfWeek = date.getDay(); // 0=Sunday, 1=Monday, etc.
+  const schedule = provider.schedule[dayOfWeek];
   
   if (!schedule) return []; // Provider doesn't work this day
   
@@ -156,8 +89,8 @@ function getAvailableDates(provider: Provider | null) {
     
     // If provider selected, check their schedule
     if (provider) {
-      const dayName = date.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
-      if (!provider.schedule[dayName]) continue; // Provider doesn't work this day
+      const dayOfWeek = date.getDay();
+      if (!provider.schedule[dayOfWeek]) continue; // Provider doesn't work this day
     }
     
     dates.push(date);
@@ -174,6 +107,8 @@ export default function BookingForm({ service }: Props) {
   const [selectedProvider, setSelectedProvider] = useState<Provider | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedTime, setSelectedTime] = useState<string>('');
+  const [availableProviders, setAvailableProviders] = useState<Provider[]>([]);
+  const [loadingProviders, setLoadingProviders] = useState(true);
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -186,8 +121,24 @@ export default function BookingForm({ service }: Props) {
     agreeToSMS: true,
   });
 
-  // Get providers who can do this service
-  const availableProviders = getProvidersForService(service.slug);
+  // Fetch providers from API (database-driven with fallback)
+  useEffect(() => {
+    async function fetchProviders() {
+      setLoadingProviders(true);
+      try {
+        const response = await fetch(`/api/booking/providers?serviceSlug=${service.slug}`);
+        const data = await response.json();
+        if (data.providers && data.providers.length > 0) {
+          setAvailableProviders(data.providers);
+        }
+      } catch (error) {
+        console.error('Error fetching providers:', error);
+      } finally {
+        setLoadingProviders(false);
+      }
+    }
+    fetchProviders();
+  }, [service.slug]);
   
   // Get dates based on selected provider
   const availableDates = getAvailableDates(selectedProvider);
@@ -197,13 +148,13 @@ export default function BookingForm({ service }: Props) {
     ? getTimeSlotsForProvider(selectedProvider, selectedDate, service.duration_minutes)
     : [];
 
-  // Auto-select if only one provider
+  // Auto-select if only one provider (after loading completes)
   useEffect(() => {
-    if (availableProviders.length === 1 && !selectedProvider) {
+    if (!loadingProviders && availableProviders.length === 1 && !selectedProvider) {
       setSelectedProvider(availableProviders[0]);
       setStep('datetime');
     }
-  }, [availableProviders, selectedProvider]);
+  }, [availableProviders, selectedProvider, loadingProviders]);
 
   // Reset date/time when provider changes
   useEffect(() => {
@@ -305,6 +256,19 @@ export default function BookingForm({ service }: Props) {
                 Select who you'd like to see for your {service.name}
               </p>
               
+              {loadingProviders ? (
+                <div className="space-y-4">
+                  {[1, 2].map((i) => (
+                    <div key={i} className="flex items-center gap-4 p-4 rounded-xl border-2 border-gray-200 animate-pulse">
+                      <div className="w-16 h-16 rounded-full bg-gray-200" />
+                      <div className="flex-1">
+                        <div className="h-5 w-32 bg-gray-200 rounded mb-2" />
+                        <div className="h-4 w-24 bg-gray-200 rounded" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
               <div className="grid gap-4">
                 {availableProviders.map((provider) => (
                   <button
@@ -351,6 +315,8 @@ export default function BookingForm({ service }: Props) {
                   <p>No providers available for this service.</p>
                   <p className="text-sm mt-2">Please call us at (630) 636-6193 to book.</p>
                 </div>
+              )}
+            </div>
               )}
             </div>
             
