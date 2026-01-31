@@ -123,6 +123,36 @@ export * from './deposits';
 // Export policies
 export * from './policies';
 
+// Export payment methods
+export * from './payment-methods';
+
+// Export consent forms
+export * from './consent-forms';
+
+// Export review boost (Google ratings)
+export * from './review-boost';
+
+// Export data/BI integration
+export * from './data-export';
+
+// Export marketing campaigns
+export * from './marketing-campaigns';
+
+// Export team scheduling
+export * from './team-scheduling';
+
+// Export reporting & analytics
+export * from './reporting';
+
+// Export integrations (Google, Meta, etc.)
+export * from './integrations';
+
+// Export daily sales / POS
+export * from './daily-sales';
+
+// Export legal protection system
+export * from './legal-protection';
+
 // Export audit logging
 export {
   logAuditEvent,
@@ -281,4 +311,9 @@ export const HGOS_FEATURES = {
   financing: true,
   resultsGallery: true,
   treatmentJourney: true,
+  
+  // NEW - Features Fresha charges extra for
+  googleReviewBoost: true, // Fresha: $14.95/mo - FREE here
+  biDataExport: true, // Fresha: $295/mo - FREE here
+  legalConsentForms: true, // Malpractice, arbitration, HIPAA - built-in
 } as const;
