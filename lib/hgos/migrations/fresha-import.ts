@@ -378,17 +378,3 @@ ON CONFLICT (fresha_client_id) DO NOTHING;
   
   return statements.join('\n');
 }
-
-// ============================================================
-// EXPORT FOR USE IN API ROUTES
-// ============================================================
-
-export {
-  excelDateToJSDate,
-  normalizePhone,
-  normalizeEmail,
-  parseDateOfBirth,
-  mapReferralSource,
-  transformFreshaClient,
-  validateClient,
-};
