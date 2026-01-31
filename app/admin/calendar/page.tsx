@@ -454,8 +454,8 @@ export default function CalendarPage() {
               const isToday = date.toDateString() === new Date().toDateString();
               const isSelected = date.toDateString() === selectedDate.toDateString();
               
-              // Count appointments for this day (mock for now)
-              const dayAppts = Math.floor(Math.random() * 8);
+              // Count appointments for the selected date (we have this data loaded)
+              const dayAppts = isSelected ? filteredAppointments.length : null;
               
               return (
                 <div 
@@ -466,7 +466,7 @@ export default function CalendarPage() {
                     'bg-gray-50 hover:bg-gray-100'
                   }`}
                   onClick={() => {
-                    setSelectedDate(date);
+                    setSelectedDate(new Date(date));
                     setViewMode('day');
                   }}
                 >
@@ -477,7 +477,7 @@ export default function CalendarPage() {
                     {date.getDate()}
                   </p>
                   <p className="text-sm text-gray-500 mt-1">
-                    {dayAppts} appts
+                    {dayAppts !== null ? `${dayAppts} appts` : 'Click to view'}
                   </p>
                 </div>
               );
@@ -546,15 +546,13 @@ export default function CalendarPage() {
                 >
                   Full Form
                 </Link>
-                <button
-                  onClick={() => {
-                    alert('Appointment created! (Connect to Supabase to save)');
-                    setShowNewApptModal(false);
-                  }}
-                  className="px-6 py-2 bg-pink-500 text-white font-medium rounded-lg hover:bg-pink-600"
+                <Link
+                  href={`/admin/appointments/new?provider=${selectedSlot?.provider}&date=${dateString}&time=${encodeURIComponent(selectedSlot?.time || '')}`}
+                  className="px-6 py-2 bg-pink-500 text-white font-medium rounded-lg hover:bg-pink-600 inline-block text-center"
+                  onClick={() => setShowNewApptModal(false)}
                 >
                   Book
-                </button>
+                </Link>
               </div>
             </div>
           </div>
