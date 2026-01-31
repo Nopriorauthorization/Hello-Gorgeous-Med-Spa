@@ -349,7 +349,7 @@ export function useProviders() {
             email: 'ryan@hellogorgeousmedspa.com',
             phone: null,
             role: 'provider',
-            title: 'RN',
+            title: 'APRN, FNP-BC',
             bio: null,
             avatar_url: null,
             is_provider: true,
@@ -369,7 +369,7 @@ export function useProviders() {
             email: 'danielle@hellogorgeousmedspa.com',
             phone: null,
             role: 'owner',
-            title: 'Owner',
+            title: 'Owner, NP',
             bio: null,
             avatar_url: null,
             is_provider: true,
@@ -387,18 +387,147 @@ export function useProviders() {
       }
 
       try {
-        const { data, error: fetchError } = await supabase
+        // Try to fetch from providers table with user info
+        const { data: providerData, error: providerError } = await supabase
+          .from('providers')
+          .select(`
+            id,
+            user_id,
+            credentials,
+            is_active,
+            users!inner(first_name, last_name, email, phone, role)
+          `)
+          .eq('is_active', true);
+
+        if (!providerError && providerData && providerData.length > 0) {
+          // Map provider data to Staff format
+          const mappedProviders: Staff[] = providerData.map((p: any) => ({
+            id: p.id,
+            user_id: p.user_id,
+            first_name: p.users.first_name,
+            last_name: p.users.last_name,
+            email: p.users.email,
+            phone: p.users.phone,
+            role: p.users.role || 'provider',
+            title: p.credentials || '',
+            bio: null,
+            avatar_url: null,
+            is_provider: true,
+            license_number: null,
+            license_expiration: null,
+            service_ids: null,
+            location_ids: null,
+            is_active: p.is_active,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          }));
+          setProviders(mappedProviders);
+          setLoading(false);
+          return;
+        }
+
+        // Fallback: try staff table
+        const { data: staffData, error: staffError } = await supabase
           .from('staff')
           .select('*')
           .eq('is_provider', true)
           .eq('is_active', true)
           .order('last_name');
 
-        if (fetchError) throw fetchError;
-        setProviders(data || []);
+        if (!staffError && staffData) {
+          setProviders(staffData);
+        } else {
+          // If both fail, use defaults
+          console.log('No providers found in database, using defaults');
+          setProviders([
+            {
+              id: 'default-1',
+              user_id: null,
+              first_name: 'Ryan',
+              last_name: 'Kent',
+              email: 'ryan@hellogorgeousmedspa.com',
+              phone: null,
+              role: 'provider',
+              title: 'APRN, FNP-BC',
+              bio: null,
+              avatar_url: null,
+              is_provider: true,
+              license_number: null,
+              license_expiration: null,
+              service_ids: null,
+              location_ids: null,
+              is_active: true,
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+            },
+            {
+              id: 'default-2',
+              user_id: null,
+              first_name: 'Danielle',
+              last_name: 'Glazier-Alcala',
+              email: 'danielle@hellogorgeousmedspa.com',
+              phone: null,
+              role: 'owner',
+              title: 'Owner, NP',
+              bio: null,
+              avatar_url: null,
+              is_provider: true,
+              license_number: null,
+              license_expiration: null,
+              service_ids: null,
+              location_ids: null,
+              is_active: true,
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+            },
+          ]);
+        }
       } catch (err) {
         console.error('Error fetching providers:', err);
         setError(err instanceof Error ? err.message : 'Failed to fetch providers');
+        // Use defaults on error
+        setProviders([
+          {
+            id: 'default-1',
+            user_id: null,
+            first_name: 'Ryan',
+            last_name: 'Kent',
+            email: 'ryan@hellogorgeousmedspa.com',
+            phone: null,
+            role: 'provider',
+            title: 'APRN, FNP-BC',
+            bio: null,
+            avatar_url: null,
+            is_provider: true,
+            license_number: null,
+            license_expiration: null,
+            service_ids: null,
+            location_ids: null,
+            is_active: true,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          },
+          {
+            id: 'default-2',
+            user_id: null,
+            first_name: 'Danielle',
+            last_name: 'Glazier-Alcala',
+            email: 'danielle@hellogorgeousmedspa.com',
+            phone: null,
+            role: 'owner',
+            title: 'Owner, NP',
+            bio: null,
+            avatar_url: null,
+            is_provider: true,
+            license_number: null,
+            license_expiration: null,
+            service_ids: null,
+            location_ids: null,
+            is_active: true,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          },
+        ]);
       } finally {
         setLoading(false);
       }

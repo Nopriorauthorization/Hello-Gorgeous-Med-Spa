@@ -285,15 +285,29 @@ export default function CalendarPage() {
       )}
 
       {/* Calendar Grid - Provider View */}
-      {!loading && viewMode === 'provider' && (
+      {!loading && viewMode === 'provider' && displayProviders.length === 0 && (
+        <div className="bg-white rounded-xl border border-gray-100 p-12 text-center">
+          <div className="text-4xl mb-4">👩‍⚕️</div>
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">No Providers Set Up</h3>
+          <p className="text-gray-500 mb-4">Add providers to see the calendar view</p>
+          <Link
+            href="/admin/staff"
+            className="px-4 py-2 bg-pink-500 text-white font-medium rounded-lg hover:bg-pink-600 inline-block"
+          >
+            Manage Staff
+          </Link>
+        </div>
+      )}
+
+      {!loading && viewMode === 'provider' && displayProviders.length > 0 && (
         <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
           {/* Provider Headers */}
-          <div className="grid border-b border-gray-100" style={{ gridTemplateColumns: `80px repeat(${displayProviders.length}, 1fr)` }}>
-            <div className="p-3 bg-gray-50 border-r border-gray-100 text-sm font-medium text-gray-500">
+          <div className="grid border-b border-gray-200" style={{ gridTemplateColumns: `80px repeat(${displayProviders.length}, 1fr)` }}>
+            <div className="p-3 bg-gray-50 border-r border-gray-200 text-sm font-medium text-gray-600">
               Time
             </div>
             {displayProviders.map((provider, index) => (
-              <div key={provider.id} className="p-3 bg-gray-50 border-r border-gray-100 last:border-r-0">
+              <div key={provider.id} className="p-3 bg-gray-50 border-r border-gray-200 last:border-r-0">
                 <div className="flex items-center gap-2">
                   <div className={`w-3 h-3 rounded-full ${PROVIDER_COLORS[index % PROVIDER_COLORS.length]}`} />
                   <span className="font-medium text-gray-900">
@@ -312,11 +326,11 @@ export default function CalendarPage() {
             {TIME_SLOTS.map((time) => (
               <div 
                 key={time} 
-                className="grid border-b border-gray-50"
+                className="grid border-b border-gray-100"
                 style={{ gridTemplateColumns: `80px repeat(${displayProviders.length}, 1fr)` }}
               >
                 {/* Time Label */}
-                <div className="p-2 border-r border-gray-100 text-xs text-gray-400 text-right pr-3">
+                <div className="p-2 border-r border-gray-200 text-xs text-gray-500 text-right pr-3 bg-gray-50">
                   {time}
                 </div>
                 
@@ -328,8 +342,8 @@ export default function CalendarPage() {
                   return (
                     <div
                       key={`${time}-${provider.id}`}
-                      className={`h-12 border-r border-gray-100 last:border-r-0 relative cursor-pointer hover:bg-gray-50 ${
-                        isHourStart ? 'border-t border-gray-100' : ''
+                      className={`h-12 border-r border-gray-200 last:border-r-0 relative cursor-pointer hover:bg-pink-50 ${
+                        isHourStart ? 'border-t border-gray-300 bg-white' : 'bg-white'
                       }`}
                       onClick={() => !slotAppts.length && handleSlotClick(time, provider.id)}
                     >
