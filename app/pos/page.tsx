@@ -3,19 +3,31 @@
 // ============================================================
 // POS TERMINAL - MAIN PAGE
 // Quick checkout and appointment-based transactions
+// With Stripe Integration
 // ============================================================
 
 import { useState } from 'react';
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
+
+// Dynamically import Stripe component (client-side only)
+const StripeCheckout = dynamic(() => import('@/components/StripeCheckout'), {
+  ssr: false,
+  loading: () => (
+    <div className="flex items-center justify-center py-12">
+      <div className="animate-spin h-8 w-8 border-4 border-pink-500 border-t-transparent rounded-full" />
+    </div>
+  ),
+});
 
 // Mock today's appointments ready for checkout
 const TODAYS_APPOINTMENTS = [
-  { id: 'a1', time: '9:00 AM', client: 'Jennifer Martinez', service: 'Botox - Full Face', provider: 'Ryan Kent', status: 'checked_in', amount: 450 },
-  { id: 'a2', time: '9:30 AM', client: 'Lisa Thompson', service: 'Lip Filler', provider: 'Ryan Kent', status: 'in_progress', amount: 650 },
-  { id: 'a3', time: '10:00 AM', client: 'Sarah Johnson', service: 'Botox + Filler Package', provider: 'Ryan Kent', status: 'completed', amount: 950 },
-  { id: 'a4', time: '10:30 AM', client: 'Amanda Chen', service: 'Glass Glow Facial', provider: 'Staff', status: 'checked_in', amount: 175 },
-  { id: 'a5', time: '11:00 AM', client: 'Rachel Brown', service: 'Semaglutide', provider: 'Ryan Kent', status: 'scheduled', amount: 400 },
-  { id: 'a6', time: '11:30 AM', client: 'Karen White', service: 'Dermaplaning', provider: 'Staff', status: 'scheduled', amount: 75 },
+  { id: 'a1', time: '9:00 AM', client: 'Jennifer Martinez', clientId: 'c1', email: 'jennifer@email.com', service: 'Botox - Full Face', provider: 'Ryan Kent, FNP-BC', status: 'checked_in', amount: 450 },
+  { id: 'a2', time: '9:30 AM', client: 'Lisa Thompson', clientId: 'c2', email: 'lisa@email.com', service: 'Lip Filler', provider: 'Ryan Kent, FNP-BC', status: 'in_progress', amount: 650 },
+  { id: 'a3', time: '10:00 AM', client: 'Sarah Johnson', clientId: 'c3', email: 'sarah@email.com', service: 'Botox + Filler Package', provider: 'Ryan Kent, FNP-BC', status: 'completed', amount: 950 },
+  { id: 'a4', time: '10:30 AM', client: 'Amanda Chen', clientId: 'c4', email: 'amanda@email.com', service: 'Glass Glow Facial', provider: 'Danielle Alcala, RN-S', status: 'checked_in', amount: 175 },
+  { id: 'a5', time: '11:00 AM', client: 'Rachel Brown', clientId: 'c5', email: 'rachel@email.com', service: 'Semaglutide', provider: 'Ryan Kent, FNP-BC', status: 'scheduled', amount: 400 },
+  { id: 'a6', time: '11:30 AM', client: 'Karen White', clientId: 'c6', email: 'karen@email.com', service: 'Dermaplaning', provider: 'Danielle Alcala, RN-S', status: 'scheduled', amount: 75 },
 ];
 
 // Recent transactions
@@ -27,6 +39,7 @@ const RECENT_TRANSACTIONS = [
 export default function POSTerminalPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedAppointment, setSelectedAppointment] = useState<string | null>(null);
+  const [recentTransactions, setRecentTransactions] = useState(RECENT_TRANSACTIONS);
 
   const filteredAppointments = TODAYS_APPOINTMENTS.filter(
     (apt) =>
@@ -39,6 +52,20 @@ export default function POSTerminalPage() {
   );
 
   const scheduled = filteredAppointments.filter((apt) => apt.status === 'scheduled');
+
+  const handlePaymentSuccess = (paymentIntentId: string, clientName: string, amount: number) => {
+    // Add to recent transactions
+    setRecentTransactions([
+      {
+        id: paymentIntentId,
+        time: new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }),
+        client: clientName,
+        amount: amount,
+        method: 'Card ••••',
+      },
+      ...recentTransactions,
+    ]);
+  };
 
   return (
     <div className="h-full flex">
@@ -159,6 +186,7 @@ export default function POSTerminalPage() {
           <CheckoutPanel
             appointment={TODAYS_APPOINTMENTS.find((a) => a.id === selectedAppointment)!}
             onClose={() => setSelectedAppointment(null)}
+            onPaymentSuccess={handlePaymentSuccess}
           />
         ) : (
           <div className="flex-1 flex flex-col">
@@ -175,7 +203,7 @@ export default function POSTerminalPage() {
             <div className="border-t border-slate-700 p-4">
               <h3 className="text-sm font-medium text-slate-400 mb-3">Recent Transactions</h3>
               <div className="space-y-2">
-                {RECENT_TRANSACTIONS.map((txn) => (
+                {recentTransactions.slice(0, 5).map((txn) => (
                   <div key={txn.id} className="flex items-center justify-between text-sm">
                     <div>
                       <p className="text-white">{txn.client}</p>
@@ -197,16 +225,20 @@ export default function POSTerminalPage() {
 function CheckoutPanel({
   appointment,
   onClose,
+  onPaymentSuccess,
 }: {
   appointment: {
     id: string;
     time: string;
     client: string;
+    clientId: string;
+    email: string;
     service: string;
     provider: string;
     amount: number;
   };
   onClose: () => void;
+  onPaymentSuccess: (paymentIntentId: string, clientName: string, amount: number) => void;
 }) {
   const [lineItems, setLineItems] = useState([
     { id: '1', name: appointment.service, quantity: 1, price: appointment.amount },
@@ -215,19 +247,25 @@ function CheckoutPanel({
   const [discountType, setDiscountType] = useState<'percent' | 'fixed'>('percent');
   const [tip, setTip] = useState(0);
   const [showPayment, setShowPayment] = useState(false);
-  const [processing, setProcessing] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState<'stripe' | 'cash' | null>(null);
   const [paid, setPaid] = useState(false);
+  const [paymentId, setPaymentId] = useState<string | null>(null);
 
   const subtotal = lineItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const discountAmount = discountType === 'percent' ? subtotal * (discount / 100) : discount;
   const total = subtotal - discountAmount + tip;
 
-  const handlePayment = async (method: string) => {
-    setProcessing(true);
-    // Simulate Stripe payment
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-    setProcessing(false);
+  const handleStripeSuccess = (paymentIntentId: string) => {
+    setPaymentId(paymentIntentId);
     setPaid(true);
+    onPaymentSuccess(paymentIntentId, appointment.client, total);
+  };
+
+  const handleCashPayment = () => {
+    const cashId = `cash_${Date.now()}`;
+    setPaymentId(cashId);
+    setPaid(true);
+    onPaymentSuccess(cashId, appointment.client, total);
   };
 
   if (paid) {
@@ -237,7 +275,8 @@ function CheckoutPanel({
           <span className="text-4xl">✓</span>
         </div>
         <h2 className="text-2xl font-bold text-white mb-2">Payment Complete!</h2>
-        <p className="text-slate-400 mb-6">${total.toFixed(2)} paid successfully</p>
+        <p className="text-slate-400 mb-2">${total.toFixed(2)} paid successfully</p>
+        <p className="text-slate-500 text-sm mb-6">ID: {paymentId?.slice(0, 20)}...</p>
         <div className="space-y-3 w-full max-w-xs">
           <button className="w-full py-3 bg-slate-700 text-white rounded-xl hover:bg-slate-600">
             📧 Email Receipt
@@ -256,6 +295,73 @@ function CheckoutPanel({
     );
   }
 
+  if (showPayment && paymentMethod === 'stripe') {
+    return (
+      <div className="flex-1 flex flex-col">
+        <div className="p-4 border-b border-slate-700 flex items-center justify-between">
+          <button onClick={() => { setShowPayment(false); setPaymentMethod(null); }} className="text-slate-400 hover:text-white">
+            ← Back
+          </button>
+          <h2 className="font-semibold text-white">Card Payment</h2>
+          <div className="w-8" />
+        </div>
+
+        <div className="flex-1 p-4 overflow-y-auto">
+          <div className="bg-slate-900 rounded-xl p-4">
+            <StripeCheckout
+              amount={subtotal - discountAmount}
+              tipAmount={tip}
+              clientId={appointment.clientId}
+              clientName={appointment.client}
+              clientEmail={appointment.email}
+              appointmentId={appointment.id}
+              services={appointment.service}
+              onSuccess={handleStripeSuccess}
+              onError={(error) => console.error('Payment error:', error)}
+              onCancel={() => { setShowPayment(false); setPaymentMethod(null); }}
+            />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (showPayment && paymentMethod === 'cash') {
+    return (
+      <div className="flex-1 flex flex-col">
+        <div className="p-4 border-b border-slate-700 flex items-center justify-between">
+          <button onClick={() => { setShowPayment(false); setPaymentMethod(null); }} className="text-slate-400 hover:text-white">
+            ← Back
+          </button>
+          <h2 className="font-semibold text-white">Cash Payment</h2>
+          <div className="w-8" />
+        </div>
+
+        <div className="flex-1 p-6 flex flex-col items-center justify-center">
+          <p className="text-slate-400 mb-2">Amount Due</p>
+          <p className="text-5xl font-bold text-white mb-8">${total.toFixed(2)}</p>
+          
+          <div className="w-full max-w-xs space-y-4">
+            <div>
+              <label className="text-sm text-slate-400 block mb-2">Cash Received</label>
+              <input
+                type="number"
+                placeholder={total.toFixed(2)}
+                className="w-full px-4 py-3 bg-slate-700 border border-slate-600 rounded-xl text-white text-2xl text-center"
+              />
+            </div>
+            <button
+              onClick={handleCashPayment}
+              className="w-full py-4 bg-green-500 text-white rounded-xl hover:bg-green-600 font-bold text-lg"
+            >
+              ✓ Mark as Paid
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (showPayment) {
     return (
       <div className="flex-1 flex flex-col">
@@ -263,7 +369,7 @@ function CheckoutPanel({
           <button onClick={() => setShowPayment(false)} className="text-slate-400 hover:text-white">
             ← Back
           </button>
-          <h2 className="font-semibold text-white">Payment</h2>
+          <h2 className="font-semibold text-white">Select Payment Method</h2>
           <div className="w-8" />
         </div>
 
@@ -271,39 +377,24 @@ function CheckoutPanel({
           <p className="text-slate-400 mb-2">Total Due</p>
           <p className="text-5xl font-bold text-white mb-8">${total.toFixed(2)}</p>
 
-          {processing ? (
-            <div className="text-center">
-              <div className="w-16 h-16 border-4 border-pink-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-              <p className="text-slate-400">Processing payment...</p>
-            </div>
-          ) : (
-            <div className="w-full max-w-xs space-y-3">
-              <button
-                onClick={() => handlePayment('card')}
-                className="w-full py-4 bg-blue-500 text-white rounded-xl hover:bg-blue-600 font-medium flex items-center justify-center gap-2"
-              >
-                💳 Card on File
-              </button>
-              <button
-                onClick={() => handlePayment('terminal')}
-                className="w-full py-4 bg-green-500 text-white rounded-xl hover:bg-green-600 font-medium flex items-center justify-center gap-2"
-              >
-                📱 Card Terminal
-              </button>
-              <button
-                onClick={() => handlePayment('manual')}
-                className="w-full py-4 bg-slate-700 text-white rounded-xl hover:bg-slate-600 font-medium flex items-center justify-center gap-2"
-              >
-                ⌨️ Manual Entry
-              </button>
-              <button
-                onClick={() => handlePayment('cash')}
-                className="w-full py-4 bg-slate-700 text-white rounded-xl hover:bg-slate-600 font-medium flex items-center justify-center gap-2"
-              >
-                💵 Cash
-              </button>
-            </div>
-          )}
+          <div className="w-full max-w-xs space-y-3">
+            <button
+              onClick={() => setPaymentMethod('stripe')}
+              className="w-full py-4 bg-blue-500 text-white rounded-xl hover:bg-blue-600 font-medium flex items-center justify-center gap-2"
+            >
+              💳 Credit/Debit Card
+            </button>
+            <button
+              onClick={() => setPaymentMethod('cash')}
+              className="w-full py-4 bg-green-600 text-white rounded-xl hover:bg-green-700 font-medium flex items-center justify-center gap-2"
+            >
+              💵 Cash
+            </button>
+          </div>
+
+          <p className="text-slate-500 text-sm mt-6">
+            🔒 Card payments processed securely by Stripe
+          </p>
         </div>
       </div>
     );
