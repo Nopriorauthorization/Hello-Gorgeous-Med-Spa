@@ -425,13 +425,6 @@ export default function AdminServicesPage() {
         </div>
       </div>
 
-      {/* Connection Status */}
-      {!isSupabaseConfigured() && (
-        <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-800">
-          Demo Mode - Connect Supabase to manage real services
-        </div>
-      )}
-
       {/* Error */}
       {error && (
         <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-800">
