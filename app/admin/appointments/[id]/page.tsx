@@ -303,12 +303,24 @@ export default function AppointmentDetailPage({ params }: { params: { id: string
                   💳 Process Payment
                 </Link>
               )}
-              <button className="w-full px-4 py-2.5 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition-colors">
-                ✏️ Edit Appointment
-              </button>
-              <button className="w-full px-4 py-2.5 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition-colors">
-                📅 Reschedule
-              </button>
+                <Link
+                  href={`/admin/appointments/${appointment.id}/edit`}
+                  className="block w-full px-4 py-2.5 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition-colors text-center"
+                >
+                  ✏️ Edit Appointment
+                </Link>
+                <Link
+                  href={`/admin/appointments/${appointment.id}/reschedule`}
+                  className="block w-full px-4 py-2.5 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition-colors text-center"
+                >
+                  📅 Reschedule
+                </Link>
+                <Link
+                  href={`/admin/charting?appointment=${appointment.id}`}
+                  className="block w-full px-4 py-2.5 bg-purple-500 text-white font-medium rounded-lg hover:bg-purple-600 transition-colors text-center"
+                >
+                  📋 Chart Note
+                </Link>
               {appointment.status !== 'completed' && appointment.status !== 'cancelled' && (
                 <button
                   onClick={() => setShowCancelModal(true)}

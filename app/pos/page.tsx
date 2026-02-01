@@ -48,12 +48,22 @@ export default function POSTerminalPage() {
     }
   }, []);
 
-  // Fetch recent payments (placeholder - would need payments API)
+  // Fetch recent payments from transactions API
   const fetchRecentPayments = useCallback(async () => {
     try {
       setPaymentsLoading(true);
-      // For now, payments come from local state
-      setPayments([]);
+      const today = new Date().toISOString().split('T')[0];
+      const res = await fetch(`/api/transactions?startDate=${today}&limit=10`);
+      const data = await res.json();
+      if (data.transactions) {
+        setPayments(data.transactions.map((t: any) => ({
+          id: t.id,
+          created_at: t.created_at,
+          client_name: t.client ? `${t.client.first_name} ${t.client.last_name}` : 'Client',
+          total_amount: t.total_amount,
+          payment_method: t.payment_method,
+        })));
+      }
     } catch (err) {
       console.error('Failed to load payments:', err);
     } finally {
