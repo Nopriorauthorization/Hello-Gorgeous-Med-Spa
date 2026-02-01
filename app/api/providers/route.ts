@@ -5,11 +5,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/hgos/supabase';
 
+// Define the ONLY active providers for Hello Gorgeous
+// These are the real providers who should appear on calendars and booking
+const ACTIVE_PROVIDER_NAMES = [
+  { first: 'Danielle', last: 'Alcala' },
+  { first: 'Ryan', last: 'Kent' },
+];
+
 export async function GET(request: NextRequest) {
   try {
     const supabase = createServerSupabaseClient();
     
-    // Fetch all active providers with user info
+    // Fetch all providers with user info
     const { data: providers, error } = await supabase
       .from('providers')
       .select(`
@@ -20,8 +27,7 @@ export async function GET(request: NextRequest) {
         is_active,
         users!inner(first_name, last_name, email)
       `)
-      .eq('is_active', true)
-      .order('users(last_name)');
+      .eq('is_active', true);
 
     if (error) {
       console.error('Error fetching providers:', error);
@@ -29,24 +35,44 @@ export async function GET(request: NextRequest) {
       // Return fallback providers
       return NextResponse.json({
         providers: [
-          { id: 'danielle-001', first_name: 'Danielle', last_name: 'Glazier-Alcala', credentials: 'Owner & Aesthetic Specialist', color_hex: '#EC4899' },
+          { id: 'danielle-001', first_name: 'Danielle', last_name: 'Alcala', credentials: 'Owner & Aesthetic Specialist', color_hex: '#EC4899' },
           { id: 'ryan-001', first_name: 'Ryan', last_name: 'Kent', credentials: 'APRN, FNP-BC', color_hex: '#8B5CF6' },
         ],
         fallback: true,
       });
     }
 
-    // Flatten the data
-    const flatProviders = (providers || []).map((p: any) => ({
-      id: p.id,
-      user_id: p.user_id,
-      first_name: p.users?.first_name,
-      last_name: p.users?.last_name,
-      email: p.users?.email,
-      credentials: p.credentials,
-      color_hex: p.color_hex,
-      is_active: p.is_active,
-    }));
+    // Flatten the data and FILTER to only show Ryan and Danielle
+    const flatProviders = (providers || [])
+      .map((p: any) => ({
+        id: p.id,
+        user_id: p.user_id,
+        first_name: p.users?.first_name,
+        last_name: p.users?.last_name,
+        email: p.users?.email,
+        credentials: p.credentials,
+        color_hex: p.color_hex,
+        is_active: p.is_active,
+      }))
+      .filter((p: any) => {
+        // Only include providers whose names match our active list
+        return ACTIVE_PROVIDER_NAMES.some(
+          active => 
+            p.first_name?.toLowerCase().includes(active.first.toLowerCase()) &&
+            p.last_name?.toLowerCase().includes(active.last.toLowerCase())
+        );
+      });
+
+    // If filtering resulted in no providers, return the fallback
+    if (flatProviders.length === 0) {
+      return NextResponse.json({
+        providers: [
+          { id: 'danielle-001', first_name: 'Danielle', last_name: 'Alcala', credentials: 'Owner & Aesthetic Specialist', color_hex: '#EC4899' },
+          { id: 'ryan-001', first_name: 'Ryan', last_name: 'Kent', credentials: 'APRN, FNP-BC', color_hex: '#8B5CF6' },
+        ],
+        fallback: true,
+      });
+    }
 
     return NextResponse.json({ providers: flatProviders });
   } catch (error) {
@@ -55,7 +81,7 @@ export async function GET(request: NextRequest) {
     // Return fallback on any error
     return NextResponse.json({
       providers: [
-        { id: 'danielle-001', first_name: 'Danielle', last_name: 'Glazier-Alcala', credentials: 'Owner & Aesthetic Specialist', color_hex: '#EC4899' },
+        { id: 'danielle-001', first_name: 'Danielle', last_name: 'Alcala', credentials: 'Owner & Aesthetic Specialist', color_hex: '#EC4899' },
         { id: 'ryan-001', first_name: 'Ryan', last_name: 'Kent', credentials: 'APRN, FNP-BC', color_hex: '#8B5CF6' },
       ],
       fallback: true,
