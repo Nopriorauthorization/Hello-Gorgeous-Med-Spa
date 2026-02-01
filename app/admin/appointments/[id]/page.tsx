@@ -28,6 +28,14 @@ export default function AppointmentDetailPage({ params }: { params: { id: string
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [cancelReason, setCancelReason] = useState('');
   const [saving, setSaving] = useState(false);
+  
+  // Consent verification state
+  const [consentStatus, setConsentStatus] = useState<{
+    hasAllRequired: boolean;
+    missingConsents: string[];
+    consentDetails: { type: string; name: string; signed: boolean; signedAt: string | null }[];
+  } | null>(null);
+  const [sendingConsent, setSendingConsent] = useState(false);
 
   // Fetch appointment from API
   useEffect(() => {
@@ -62,6 +70,18 @@ export default function AppointmentDetailPage({ params }: { params: { id: string
               last_name: apt.provider_name?.split(' ').slice(1).join(' ') || '',
             },
           });
+          
+          // Fetch consent status for this client
+          if (apt.client_id) {
+            fetch(`/api/consents/verify?clientId=${apt.client_id}`)
+              .then(res => res.json())
+              .then(data => {
+                if (!data.error) {
+                  setConsentStatus(data);
+                }
+              })
+              .catch(err => console.error('Error fetching consent status:', err));
+          }
         }
       } catch (err) {
         console.error('Error fetching appointment:', err);
@@ -72,6 +92,37 @@ export default function AppointmentDetailPage({ params }: { params: { id: string
 
     fetchAppointment();
   }, [params.id]);
+
+  // Send consent forms to client
+  const sendConsentForms = async () => {
+    if (!appointment?.client?.id) return;
+    
+    setSendingConsent(true);
+    try {
+      const res = await fetch('/api/consents/request', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          clientId: appointment.client.id,
+          formTypes: ['hipaa', 'treatment_consent', 'financial_policy'],
+          appointmentId: params.id,
+          sendVia: 'sms',
+        }),
+      });
+      
+      const data = await res.json();
+      if (data.success) {
+        alert(`Consent forms sent to ${appointment.client.phone || appointment.client.email}!`);
+      } else {
+        alert('Failed to send consent forms: ' + (data.error || 'Unknown error'));
+      }
+    } catch (err) {
+      console.error('Error sending consent:', err);
+      alert('Failed to send consent forms');
+    } finally {
+      setSendingConsent(false);
+    }
+  };
 
   const currentStatus = STATUSES.find((s) => s.value === appointment?.status);
 
@@ -268,6 +319,61 @@ export default function AppointmentDetailPage({ params }: { params: { id: string
                 </div>
               </div>
             </div>
+          </div>
+
+          {/* Consent Status Card */}
+          <div className={`rounded-xl border shadow-sm p-6 ${
+            consentStatus?.hasAllRequired 
+              ? 'bg-green-50 border-green-200' 
+              : 'bg-amber-50 border-amber-200'
+          }`}>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-semibold text-gray-900">Consent Forms</h3>
+              {consentStatus?.hasAllRequired ? (
+                <span className="px-2 py-1 text-xs font-medium bg-green-100 text-green-700 rounded-full">
+                  ✓ Complete
+                </span>
+              ) : (
+                <span className="px-2 py-1 text-xs font-medium bg-amber-100 text-amber-700 rounded-full">
+                  ⚠️ Missing
+                </span>
+              )}
+            </div>
+            
+            {consentStatus ? (
+              <div className="space-y-2">
+                {consentStatus.consentDetails?.map((consent) => (
+                  <div key={consent.type} className="flex items-center justify-between py-1">
+                    <span className="text-sm text-gray-700">{consent.name}</span>
+                    {consent.signed ? (
+                      <span className="text-xs text-green-600">
+                        ✓ {new Date(consent.signedAt!).toLocaleDateString()}
+                      </span>
+                    ) : (
+                      <span className="text-xs text-amber-600">Not signed</span>
+                    )}
+                  </div>
+                ))}
+                
+                {!consentStatus.hasAllRequired && (
+                  <button
+                    onClick={sendConsentForms}
+                    disabled={sendingConsent}
+                    className="w-full mt-3 px-4 py-2 bg-amber-500 text-white text-sm font-medium rounded-lg hover:bg-amber-600 transition-colors disabled:opacity-50"
+                  >
+                    {sendingConsent ? 'Sending...' : '📱 Send Consent Forms'}
+                  </button>
+                )}
+              </div>
+            ) : (
+              <p className="text-sm text-gray-500">Loading consent status...</p>
+            )}
+
+            {!consentStatus?.hasAllRequired && (
+              <p className="text-xs text-amber-700 mt-3">
+                ⚠️ Treatment cannot proceed without signed consents
+              </p>
+            )}
           </div>
         </div>
 
