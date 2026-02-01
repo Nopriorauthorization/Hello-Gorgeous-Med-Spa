@@ -1,154 +1,112 @@
 // ============================================================
-// CLIENTS API
-// CRUD operations for clients
+// API: CLIENTS - Full CRUD with service role (bypasses RLS)
 // ============================================================
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { createServerSupabaseClient } from '@/lib/hgos/supabase';
 
-// GET /api/clients - List clients with search and pagination
 export async function GET(request: NextRequest) {
-  const supabase = createServerSupabaseClient();
-  if (!supabase) {
-    return NextResponse.json({ error: 'Database not configured' }, { status: 500 });
-  }
-
-  const searchParams = request.nextUrl.searchParams;
-  const search = searchParams.get('search');
-  const limit = parseInt(searchParams.get('limit') || '50');
-  const offset = parseInt(searchParams.get('offset') || '0');
-  const status = searchParams.get('status');
-  const isVip = searchParams.get('vip');
-
   try {
+    const supabase = createServerSupabaseClient();
+    const { searchParams } = new URL(request.url);
+    const search = searchParams.get('search');
+    const limit = parseInt(searchParams.get('limit') || '100');
+    const offset = parseInt(searchParams.get('offset') || '0');
+
+    // Get clients with user info
     let query = supabase
       .from('clients')
-      .select('*', { count: 'exact' })
-      .order('last_name', { ascending: true })
+      .select(`
+        *,
+        users!inner(id, first_name, last_name, email, phone)
+      `, { count: 'exact' })
+      .order('created_at', { ascending: false })
       .range(offset, offset + limit - 1);
-
-    if (search) {
-      query = query.or(
-        `first_name.ilike.%${search}%,last_name.ilike.%${search}%,email.ilike.%${search}%,phone.ilike.%${search}%`
-      );
-    }
-
-    if (status) {
-      query = query.eq('status', status);
-    }
-
-    if (isVip === 'true') {
-      query = query.eq('is_vip', true);
-    }
 
     const { data, error, count } = await query;
 
-    if (error) throw error;
+    if (error) {
+      console.error('Error fetching clients:', error);
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
 
-    return NextResponse.json({
-      clients: data,
-      total: count,
-      limit,
-      offset,
-    });
-  } catch (error) {
-    console.error('Error fetching clients:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch clients' },
-      { status: 500 }
-    );
-  }
-}
+    // Flatten the data
+    const clients = (data || []).map((c: any) => ({
+      id: c.id,
+      user_id: c.user_id,
+      first_name: c.users?.first_name,
+      last_name: c.users?.last_name,
+      email: c.users?.email,
+      phone: c.users?.phone,
+      date_of_birth: c.date_of_birth,
+      created_at: c.created_at,
+      last_visit: c.last_visit_at,
+      total_spent: c.lifetime_value_cents ? c.lifetime_value_cents / 100 : 0,
+      visit_count: c.visit_count || 0,
+    }));
 
-// POST /api/clients - Create new client
-export async function POST(request: NextRequest) {
-  const supabase = createServerSupabaseClient();
-  if (!supabase) {
-    return NextResponse.json({ error: 'Database not configured' }, { status: 500 });
-  }
-
-  try {
-    const body = await request.json();
-    const {
-      first_name,
-      last_name,
-      email,
-      phone,
-      date_of_birth,
-      gender,
-      address_line1,
-      address_line2,
-      city,
-      state,
-      postal_code,
-      emergency_contact_name,
-      emergency_contact_phone,
-      source,
-      notes,
-      tags,
-    } = body;
-
-    // Validate required fields
-    if (!first_name || !last_name) {
-      return NextResponse.json(
-        { error: 'first_name and last_name are required' },
-        { status: 400 }
+    // Filter by search if provided
+    let filteredClients = clients;
+    if (search) {
+      const searchLower = search.toLowerCase();
+      filteredClients = clients.filter((c: any) => 
+        c.first_name?.toLowerCase().includes(searchLower) ||
+        c.last_name?.toLowerCase().includes(searchLower) ||
+        c.email?.toLowerCase().includes(searchLower) ||
+        c.phone?.includes(search)
       );
     }
 
-    // Check for existing client with same email
-    if (email) {
-      const { data: existing } = await supabase
-        .from('clients')
-        .select('id')
-        .eq('email', email)
-        .single();
+    return NextResponse.json({
+      clients: filteredClients,
+      total: count || 0,
+    });
+  } catch (error) {
+    console.error('Clients API error:', error);
+    return NextResponse.json({ error: 'Failed to fetch clients' }, { status: 500 });
+  }
+}
 
-      if (existing) {
-        return NextResponse.json(
-          { error: 'Client with this email already exists', existingId: existing.id },
-          { status: 409 }
-        );
-      }
+export async function POST(request: NextRequest) {
+  try {
+    const supabase = createServerSupabaseClient();
+    const body = await request.json();
+
+    // Create user first
+    const { data: user, error: userError } = await supabase
+      .from('users')
+      .insert({
+        first_name: body.firstName,
+        last_name: body.lastName,
+        email: body.email?.toLowerCase(),
+        phone: body.phone,
+        role: 'client',
+      })
+      .select('id')
+      .single();
+
+    if (userError) {
+      return NextResponse.json({ error: userError.message }, { status: 500 });
     }
 
-    // Create client
-    const { data, error } = await supabase
+    // Create client record
+    const { data: client, error: clientError } = await supabase
       .from('clients')
       .insert({
-        first_name,
-        last_name,
-        email,
-        phone,
-        date_of_birth,
-        gender,
-        address_line1,
-        address_line2,
-        city,
-        state,
-        postal_code,
-        emergency_contact_name,
-        emergency_contact_phone,
-        client_type: 'regular',
-        status: 'active',
-        source: source || 'walk-in',
-        notes,
-        tags: tags || [],
-        is_vip: false,
-        total_visits: 0,
-        total_spent: 0,
+        user_id: user.id,
+        date_of_birth: body.dateOfBirth || null,
+        gender: body.gender || null,
+        referral_source: body.referralSource || null,
       })
       .select()
       .single();
 
-    if (error) throw error;
+    if (clientError) {
+      return NextResponse.json({ error: clientError.message }, { status: 500 });
+    }
 
-    return NextResponse.json({ client: data }, { status: 201 });
+    return NextResponse.json({ client, user });
   } catch (error) {
-    console.error('Error creating client:', error);
-    return NextResponse.json(
-      { error: 'Failed to create client' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to create client' }, { status: 500 });
   }
 }

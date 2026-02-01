@@ -1,145 +1,133 @@
 // ============================================================
-// APPOINTMENTS API
-// CRUD operations for appointments
+// API: APPOINTMENTS - Full CRUD with service role (bypasses RLS)
 // ============================================================
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { createServerSupabaseClient } from '@/lib/hgos/supabase';
 
-// GET /api/appointments - List appointments with filters
 export async function GET(request: NextRequest) {
-  const supabase = createServerSupabaseClient();
-  if (!supabase) {
-    return NextResponse.json({ error: 'Database not configured' }, { status: 500 });
-  }
-
-  const searchParams = request.nextUrl.searchParams;
-  const date = searchParams.get('date');
-  const providerId = searchParams.get('providerId');
-  const clientId = searchParams.get('clientId');
-  const status = searchParams.get('status');
-  const limit = parseInt(searchParams.get('limit') || '50');
-
   try {
+    const supabase = createServerSupabaseClient();
+    const { searchParams } = new URL(request.url);
+    const date = searchParams.get('date');
+    const providerId = searchParams.get('provider_id');
+
     let query = supabase
       .from('appointments')
       .select(`
         *,
-        client:clients(id, first_name, last_name, email, phone),
-        provider:staff(id, first_name, last_name, title),
-        service:services(id, name, price, duration_minutes)
+        client:clients(
+          id,
+          user_id,
+          users(first_name, last_name, email, phone)
+        ),
+        provider:providers(
+          id,
+          credentials,
+          color_hex,
+          users(first_name, last_name)
+        ),
+        service:services(id, name, price_cents, duration_minutes)
       `)
-      .order('scheduled_at', { ascending: true })
-      .limit(limit);
+      .order('starts_at', { ascending: true });
 
     if (date) {
       query = query
-        .gte('scheduled_at', `${date}T00:00:00`)
-        .lt('scheduled_at', `${date}T23:59:59`);
+        .gte('starts_at', `${date}T00:00:00`)
+        .lt('starts_at', `${date}T23:59:59`);
     }
 
     if (providerId) {
       query = query.eq('provider_id', providerId);
     }
 
-    if (clientId) {
-      query = query.eq('client_id', clientId);
-    }
-
-    if (status) {
-      query = query.eq('status', status);
-    }
-
     const { data, error } = await query;
 
-    if (error) throw error;
+    if (error) {
+      console.error('Error fetching appointments:', error);
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
 
-    return NextResponse.json({ appointments: data });
+    // Flatten nested data for easier use
+    const appointments = (data || []).map((apt: any) => ({
+      ...apt,
+      client_name: apt.client?.users ? 
+        `${apt.client.users.first_name} ${apt.client.users.last_name}` : 'Unknown',
+      client_email: apt.client?.users?.email,
+      client_phone: apt.client?.users?.phone,
+      provider_name: apt.provider?.users ?
+        `${apt.provider.users.first_name} ${apt.provider.users.last_name}` : 'Unknown',
+      provider_color: apt.provider?.color_hex || '#EC4899',
+      service_name: apt.service?.name || 'Service',
+      service_price: apt.service?.price_cents ? apt.service.price_cents / 100 : 0,
+      duration: apt.service?.duration_minutes || 30,
+    }));
+
+    return NextResponse.json({ appointments });
   } catch (error) {
-    console.error('Error fetching appointments:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch appointments' },
-      { status: 500 }
-    );
+    console.error('Appointments API error:', error);
+    return NextResponse.json({ error: 'Failed to fetch appointments' }, { status: 500 });
   }
 }
 
-// POST /api/appointments - Create new appointment
 export async function POST(request: NextRequest) {
-  const supabase = createServerSupabaseClient();
-  if (!supabase) {
-    return NextResponse.json({ error: 'Database not configured' }, { status: 500 });
-  }
-
   try {
+    const supabase = createServerSupabaseClient();
     const body = await request.json();
-    const {
-      client_id,
-      provider_id,
-      service_id,
-      location_id,
-      scheduled_at,
-      duration_minutes,
-      notes,
-      type = 'service',
-    } = body;
 
-    // Validate required fields
-    if (!client_id || !scheduled_at) {
-      return NextResponse.json(
-        { error: 'client_id and scheduled_at are required' },
-        { status: 400 }
-      );
-    }
+    // Calculate ends_at from starts_at and duration
+    const startsAt = new Date(body.starts_at);
+    const duration = body.duration_minutes || 30;
+    const endsAt = new Date(startsAt.getTime() + duration * 60000);
 
-    // Check for conflicts
-    const appointmentEnd = new Date(new Date(scheduled_at).getTime() + (duration_minutes || 30) * 60000);
-    
-    const { data: conflicts } = await supabase
-      .from('appointments')
-      .select('id')
-      .eq('provider_id', provider_id)
-      .neq('status', 'cancelled')
-      .gte('scheduled_at', new Date(scheduled_at).toISOString())
-      .lt('scheduled_at', appointmentEnd.toISOString());
-
-    if (conflicts && conflicts.length > 0) {
-      return NextResponse.json(
-        { error: 'Time slot conflicts with existing appointment' },
-        { status: 409 }
-      );
-    }
-
-    // Create appointment
     const { data, error } = await supabase
       .from('appointments')
       .insert({
-        client_id,
-        provider_id,
-        service_id,
-        location_id,
-        scheduled_at,
-        duration_minutes: duration_minutes || 30,
-        notes,
-        type,
-        status: 'booked',
+        client_id: body.client_id,
+        provider_id: body.provider_id,
+        service_id: body.service_id,
+        starts_at: body.starts_at,
+        ends_at: endsAt.toISOString(),
+        status: 'scheduled',
+        notes: body.notes || null,
+        source: body.source || 'admin',
       })
-      .select(`
-        *,
-        client:clients(id, first_name, last_name),
-        provider:staff(id, first_name, last_name),
-        service:services(id, name, price)
-      `)
+      .select()
       .single();
 
-    if (error) throw error;
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
 
-    return NextResponse.json({ appointment: data }, { status: 201 });
+    return NextResponse.json({ appointment: data });
   } catch (error) {
-    console.error('Error creating appointment:', error);
-    return NextResponse.json(
-      { error: 'Failed to create appointment' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to create appointment' }, { status: 500 });
+  }
+}
+
+export async function PUT(request: NextRequest) {
+  try {
+    const supabase = createServerSupabaseClient();
+    const body = await request.json();
+    const { id, ...updateData } = body;
+
+    if (!id) {
+      return NextResponse.json({ error: 'Appointment ID required' }, { status: 400 });
+    }
+
+    const { data, error } = await supabase
+      .from('appointments')
+      .update(updateData)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    return NextResponse.json({ appointment: data });
+  } catch (error) {
+    return NextResponse.json({ error: 'Failed to update appointment' }, { status: 500 });
   }
 }

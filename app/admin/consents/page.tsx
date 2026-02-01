@@ -7,7 +7,6 @@
 // ============================================================
 
 import { useState, useEffect } from 'react';
-import { createBrowserSupabaseClient } from '@/lib/hgos/supabase';
 
 interface ConsentTemplate {
   id: string;
@@ -47,69 +46,25 @@ export default function AdminConsentsPage() {
     required_for_services: [] as string[],
   });
 
-  const supabase = createBrowserSupabaseClient();
-
   useEffect(() => {
     fetchTemplates();
   }, []);
 
+  // Fetch via API (bypasses RLS)
   const fetchTemplates = async () => {
     setLoading(true);
     setError(null);
     
     try {
-      // Fetch consent templates
-      const { data: templatesData, error: templatesError } = await supabase
-        .from('consent_templates')
-        .select('*')
-        .order('name');
+      const response = await fetch('/api/consents');
+      const data = await response.json();
 
-      if (templatesError) {
-        console.error('Error fetching templates:', templatesError);
-        // If table doesn't exist, show empty state with option to create
-        if (templatesError.code === '42P01') {
-          setTemplates([]);
-          setError('Consent templates table not found. Please run the clinical schema migration.');
-          setLoading(false);
-          return;
-        }
-        throw templatesError;
+      if (data.error && !data.templates) {
+        throw new Error(data.error);
       }
 
-      // Fetch signed counts for each template
-      const templatesWithCounts = await Promise.all(
-        (templatesData || []).map(async (template) => {
-          const { count } = await supabase
-            .from('client_consents')
-            .select('*', { count: 'exact', head: true })
-            .eq('consent_template_id', template.id);
-          
-          return { ...template, signed_count: count || 0 };
-        })
-      );
-
-      setTemplates(templatesWithCounts);
-
-      // Calculate stats
-      const totalSigned = templatesWithCounts.reduce((sum, t) => sum + (t.signed_count || 0), 0);
-      
-      // Count expiring consents (within 30 days)
-      const thirtyDaysFromNow = new Date();
-      thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
-      
-      const { count: expiringCount } = await supabase
-        .from('client_consents')
-        .select('*', { count: 'exact', head: true })
-        .lt('expires_at', thirtyDaysFromNow.toISOString())
-        .gt('expires_at', new Date().toISOString())
-        .eq('is_valid', true);
-
-      setStats({
-        total: templatesWithCounts.length,
-        totalSigned,
-        expiringSoon: expiringCount || 0,
-      });
-
+      setTemplates(data.templates || []);
+      setStats(data.stats || { total: 0, totalSigned: 0, expiringSoon: 0 });
     } catch (err) {
       console.error('Error:', err);
       setError(err instanceof Error ? err.message : 'Failed to load consent templates');
@@ -157,46 +112,28 @@ export default function AdminConsentsPage() {
       .replace(/(^-|-$)/g, '');
   };
 
+  // Save via API
   const handleSave = async () => {
     setSaving(true);
     try {
-      if (selectedTemplate) {
-        // Update existing
-        const { error } = await supabase
-          .from('consent_templates')
-          .update({
-            name: editForm.name,
-            slug: editForm.slug,
-            description: editForm.description || null,
-            content: editForm.content,
-            is_active: editForm.is_active,
-            requires_witness: editForm.requires_witness,
-            required_for_services: editForm.required_for_services.length > 0 ? editForm.required_for_services : null,
-            updated_at: new Date().toISOString(),
-            version: selectedTemplate.version + 1, // Increment version on edit
-          })
-          .eq('id', selectedTemplate.id);
+      const method = selectedTemplate ? 'PUT' : 'POST';
+      const body = selectedTemplate 
+        ? { id: selectedTemplate.id, ...editForm }
+        : editForm;
 
-        if (error) throw error;
-      } else {
-        // Create new
-        const { error } = await supabase
-          .from('consent_templates')
-          .insert({
-            name: editForm.name,
-            slug: editForm.slug || generateSlug(editForm.name),
-            description: editForm.description || null,
-            content: editForm.content,
-            is_active: editForm.is_active,
-            requires_witness: editForm.requires_witness,
-            required_for_services: editForm.required_for_services.length > 0 ? editForm.required_for_services : null,
-          });
+      const response = await fetch('/api/consents', {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
 
-        if (error) throw error;
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Failed to save');
       }
 
       setShowEditModal(false);
-      fetchTemplates(); // Refresh list
+      fetchTemplates();
     } catch (err) {
       console.error('Save error:', err);
       alert(err instanceof Error ? err.message : 'Failed to save consent template');
@@ -205,18 +142,22 @@ export default function AdminConsentsPage() {
     }
   };
 
+  // Delete via API
   const handleDelete = async (template: ConsentTemplate) => {
     if (!confirm(`Are you sure you want to delete "${template.name}"? This cannot be undone.`)) {
       return;
     }
 
     try {
-      const { error } = await supabase
-        .from('consent_templates')
-        .delete()
-        .eq('id', template.id);
+      const response = await fetch(`/api/consents?id=${template.id}`, {
+        method: 'DELETE',
+      });
 
-      if (error) throw error;
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Failed to delete');
+      }
+
       fetchTemplates();
     } catch (err) {
       console.error('Delete error:', err);
@@ -224,14 +165,22 @@ export default function AdminConsentsPage() {
     }
   };
 
+  // Toggle via API
   const toggleActive = async (template: ConsentTemplate) => {
     try {
-      const { error } = await supabase
-        .from('consent_templates')
-        .update({ is_active: !template.is_active, updated_at: new Date().toISOString() })
-        .eq('id', template.id);
+      const response = await fetch('/api/consents', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: template.id,
+          is_active: !template.is_active,
+        }),
+      });
 
-      if (error) throw error;
+      if (!response.ok) {
+        throw new Error('Failed to update');
+      }
+
       fetchTemplates();
     } catch (err) {
       console.error('Toggle error:', err);
