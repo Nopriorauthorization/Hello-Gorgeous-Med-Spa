@@ -635,6 +635,19 @@ export default function BookingForm({ service }: Props) {
                 />
               </div>
 
+              {/* Cancellation & No-Show Policy Box */}
+              <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
+                <h4 className="font-semibold text-amber-900 mb-2 flex items-center gap-2">
+                  ⚠️ Cancellation & No-Show Policy
+                </h4>
+                <ul className="text-sm text-amber-800 space-y-1">
+                  <li>• <strong>24-hour notice required</strong> to cancel or reschedule</li>
+                  <li>• Late cancellations (under 24 hrs) may incur a <strong>50% service fee</strong></li>
+                  <li>• No-shows may be charged the <strong>full service amount</strong></li>
+                  <li>• Clients with 3+ no-shows may require a deposit for future bookings</li>
+                </ul>
+              </div>
+
               {/* Agreements */}
               <div className="space-y-3 pt-2">
                 <label className="flex items-start gap-3 cursor-pointer">
@@ -660,11 +673,12 @@ export default function BookingForm({ service }: Props) {
                     I agree to the{' '}
                     <a href="/terms" target="_blank" className="text-pink-600 hover:underline">
                       terms of service
-                    </a>{' '}
-                    and{' '}
+                    </a>
+                    ,{' '}
                     <a href="/privacy" target="_blank" className="text-pink-600 hover:underline">
                       privacy policy
-                    </a> *
+                    </a>
+                    , and <strong>cancellation policy</strong> above *
                   </span>
                 </label>
               </div>
@@ -754,6 +768,14 @@ export default function BookingForm({ service }: Props) {
               >
                 📅 Add to Calendar
               </a>
+            </div>
+
+            {/* Reminder about policies */}
+            <div className="bg-gray-100 rounded-xl p-4 mt-6 text-left max-w-sm mx-auto">
+              <p className="text-xs text-gray-600">
+                <strong>Reminder:</strong> Please arrive 5-10 minutes early. If you need to cancel or 
+                reschedule, please provide at least 24 hours notice to avoid a cancellation fee.
+              </p>
             </div>
 
             <p className="text-sm text-gray-500 mt-8">

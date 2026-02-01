@@ -100,20 +100,69 @@ export async function POST(request: NextRequest) {
     const baseUrl = process.env.NEXTAUTH_URL || 'https://hellogorgeousmedspa.com';
     const consentLink = `${baseUrl}/consent/${token}`;
 
-    // TODO: Actually send email/SMS here
-    // For now, we'll return the link for testing
-    // In production, integrate with SendGrid, Twilio, etc.
-
     const formNames = formTypes.map((ft: ConsentFormType) => getConsentForm(ft)?.shortName).join(', ');
 
-    // Log the request (in real implementation, this would send the email)
-    console.log(`
-      📧 CONSENT REQUEST
-      To: ${user.first_name} ${user.last_name} <${sentTo}>
-      Forms: ${formNames}
-      Link: ${consentLink}
-      Expires: ${expiresAt.toLocaleDateString()}
-    `);
+    // SEND SMS via Telnyx
+    if (sendVia === 'sms' || sendVia === 'both') {
+      try {
+        const telnyxApiKey = process.env.TELNYX_API_KEY;
+        const telnyxFromNumber = process.env.TELNYX_PHONE_NUMBER;
+        
+        if (telnyxApiKey && telnyxFromNumber && user.phone) {
+          const smsMessage = `Hello Gorgeous Med Spa: Hi ${user.first_name}! Please complete your consent forms before your appointment: ${consentLink} - Required forms: ${formNames}`;
+          
+          await fetch('https://api.telnyx.com/v2/messages', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${telnyxApiKey}`,
+            },
+            body: JSON.stringify({
+              from: telnyxFromNumber,
+              to: user.phone,
+              text: smsMessage,
+            }),
+          });
+          console.log('📱 Consent SMS sent to:', user.phone);
+        }
+      } catch (smsErr) {
+        console.error('SMS send error:', smsErr);
+        // Don't fail if SMS fails
+      }
+    }
+
+    // SEND EMAIL (basic transactional email)
+    if (sendVia === 'email' || sendVia === 'both') {
+      try {
+        // Log for now - in production, integrate with SendGrid/Resend/etc.
+        console.log(`
+📧 CONSENT EMAIL READY TO SEND:
+To: ${user.first_name} ${user.last_name} <${user.email}>
+Subject: Please Complete Your Consent Forms - Hello Gorgeous Med Spa
+
+Dear ${user.first_name},
+
+Thank you for booking with Hello Gorgeous Med Spa!
+
+Before your appointment, please complete the following required consent forms:
+${formNames}
+
+Click here to sign your forms: ${consentLink}
+
+This link will expire on ${expiresAt.toLocaleDateString()}.
+
+If you have any questions, please call us at (630) 636-6193.
+
+See you soon!
+Hello Gorgeous Med Spa
+74 W. Washington St, Oswego, IL 60543
+        `);
+      } catch (emailErr) {
+        console.error('Email send error:', emailErr);
+      }
+    }
+
+    console.log(`📋 Consent request created for ${user.first_name} ${user.last_name}`);
 
     return NextResponse.json({
       success: true,
