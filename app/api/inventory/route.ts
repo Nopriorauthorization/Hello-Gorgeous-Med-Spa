@@ -1,28 +1,36 @@
 // ============================================================
-// INVENTORY API
-// CRUD operations for inventory items and lots
+// API: INVENTORY - Full CRUD
+// Manage products, stock levels, lot numbers
 // ============================================================
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { createServerSupabaseClient } from '@/lib/hgos/supabase';
 
-// GET /api/inventory - List inventory items with stock levels
+// GET /api/inventory - List inventory with optional filters
 export async function GET(request: NextRequest) {
-  const supabase = createServerSupabaseClient();
-  if (!supabase) {
-    return NextResponse.json({ error: 'Database not configured' }, { status: 500 });
-  }
-
-  const searchParams = request.nextUrl.searchParams;
-  const category = searchParams.get('category');
-  const lowStockOnly = searchParams.get('lowStockOnly') === 'true';
-  const search = searchParams.get('search');
-
   try {
-    // Get inventory items
+    const supabase = createServerSupabaseClient();
+    const { searchParams } = new URL(request.url);
+    
+    const category = searchParams.get('category');
+    const lowStockOnly = searchParams.get('lowStockOnly') === 'true';
+    const search = searchParams.get('search');
+
     let query = supabase
-      .from('inventory_items')
-      .select('*')
+      .from('inventory_products')
+      .select(`
+        id,
+        name,
+        brand,
+        category,
+        sku,
+        current_stock,
+        reorder_point,
+        price_per_unit,
+        cost_per_unit,
+        is_active,
+        inventory_lots(id, lot_number, quantity, expiration_date, received_at)
+      `)
       .eq('is_active', true)
       .order('name');
 
@@ -34,103 +42,197 @@ export async function GET(request: NextRequest) {
       query = query.or(`name.ilike.%${search}%,brand.ilike.%${search}%,sku.ilike.%${search}%`);
     }
 
-    const { data: items, error: itemsError } = await query;
+    const { data: products, error } = await query;
 
-    if (itemsError) throw itemsError;
+    if (error) {
+      console.error('Inventory fetch error:', error);
+      return NextResponse.json({ inventory: [] });
+    }
 
-    // Get current stock for each item from active, non-expired lots
-    const { data: lots, error: lotsError } = await supabase
-      .from('inventory_lots')
-      .select('*')
-      .eq('status', 'active')
-      .gt('expiration_date', new Date().toISOString().split('T')[0]);
+    let inventory = (products || []).map(p => ({
+      id: p.id,
+      name: p.name,
+      brand: p.brand,
+      category: p.category,
+      sku: p.sku,
+      currentStock: p.current_stock || 0,
+      reorder_point: p.reorder_point || 10,
+      price_per_unit: p.price_per_unit || 0,
+      cost_per_unit: p.cost_per_unit || 0,
+      lots: p.inventory_lots || [],
+    }));
 
-    if (lotsError) throw lotsError;
+    if (lowStockOnly) {
+      inventory = inventory.filter(item => item.currentStock <= item.reorder_point);
+    }
 
-    // Combine items with their stock levels
-    const inventory = (items || []).map(item => {
-      const itemLots = (lots || []).filter(lot => lot.item_id === item.id);
-      const currentStock = itemLots.reduce((sum, lot) => sum + (lot.quantity_remaining || 0), 0);
-      
-      return {
-        ...item,
-        currentStock,
-        lots: itemLots,
-        isLowStock: currentStock <= item.reorder_point,
-      };
-    });
-
-    // Filter low stock if requested
-    const filteredInventory = lowStockOnly 
-      ? inventory.filter(item => item.isLowStock)
-      : inventory;
-
-    // Calculate stats
-    const stats = {
-      total: inventory.length,
-      lowStock: inventory.filter(i => i.isLowStock).length,
-      totalValue: inventory.reduce((sum, i) => sum + (i.currentStock * (i.cost_per_unit || 0)), 0),
-      categories: [...new Set(inventory.map(i => i.category))].length,
-    };
-
-    return NextResponse.json({
-      inventory: filteredInventory,
-      stats,
-    });
+    return NextResponse.json({ inventory });
   } catch (error) {
-    console.error('Error fetching inventory:', error);
-    return NextResponse.json({ error: 'Failed to fetch inventory' }, { status: 500 });
+    console.error('Inventory GET error:', error);
+    return NextResponse.json({ inventory: [] });
   }
 }
 
-// POST /api/inventory - Create new inventory item
+// POST /api/inventory - Create new product
 export async function POST(request: NextRequest) {
-  const supabase = createServerSupabaseClient();
-  if (!supabase) {
-    return NextResponse.json({ error: 'Database not configured' }, { status: 500 });
-  }
-
   try {
+    const supabase = createServerSupabaseClient();
     const body = await request.json();
-    const {
-      name,
-      brand,
-      category,
-      sku,
-      unit_type = 'units',
-      cost_per_unit = 0,
-      price_per_unit = 0,
-      reorder_point = 10,
-      is_controlled = false,
-      requires_lot_tracking = true,
-    } = body;
 
-    if (!name || !category) {
-      return NextResponse.json({ error: 'Name and category are required' }, { status: 400 });
+    const { name, brand, category, sku, reorder_point, price_per_unit, cost_per_unit } = body;
+
+    if (!name) {
+      return NextResponse.json({ error: 'Product name is required' }, { status: 400 });
     }
 
-    const { data, error } = await supabase
-      .from('inventory_items')
+    const { data: product, error } = await supabase
+      .from('inventory_products')
       .insert({
         name,
-        brand,
-        category,
-        sku,
-        unit_type,
-        cost_per_unit,
-        price_per_unit,
-        reorder_point,
-        is_controlled,
-        requires_lot_tracking,
+        brand: brand || null,
+        category: category || 'supplies',
+        sku: sku || null,
+        current_stock: 0,
+        reorder_point: reorder_point || 10,
+        price_per_unit: price_per_unit || 0,
+        cost_per_unit: cost_per_unit || 0,
+        is_active: true,
       })
       .select()
       .single();
 
-    if (error) throw error;
+    if (error) {
+      console.error('Product create error:', error);
+      return NextResponse.json({ error: 'Failed to create product' }, { status: 500 });
+    }
 
-    return NextResponse.json({ item: data }, { status: 201 });
+    return NextResponse.json({ success: true, product });
   } catch (error) {
-    console.error('Error creating inventory item:', error);
-    return NextResponse.json({ error: 'Failed to create inventory item' }, { status: 500 });
+    console.error('Inventory POST error:', error);
+    return NextResponse.json({ error: 'Failed to create product' }, { status: 500 });
+  }
+}
+
+// PUT /api/inventory - Update product or receive stock
+export async function PUT(request: NextRequest) {
+  try {
+    const supabase = createServerSupabaseClient();
+    const body = await request.json();
+
+    const { id, action, ...data } = body;
+
+    if (!id) {
+      return NextResponse.json({ error: 'Product ID is required' }, { status: 400 });
+    }
+
+    // RECEIVE STOCK action
+    if (action === 'receive_stock') {
+      const { quantity, lot_number, expiration_date, cost_per_unit, notes } = data;
+
+      if (!quantity || quantity <= 0) {
+        return NextResponse.json({ error: 'Valid quantity is required' }, { status: 400 });
+      }
+
+      // Create lot record if lot tracking enabled
+      if (lot_number) {
+        await supabase
+          .from('inventory_lots')
+          .insert({
+            product_id: id,
+            lot_number,
+            quantity,
+            expiration_date: expiration_date || null,
+            received_at: new Date().toISOString(),
+            notes: notes || null,
+          });
+      }
+
+      // Update stock level
+      const { data: current } = await supabase
+        .from('inventory_products')
+        .select('current_stock')
+        .eq('id', id)
+        .single();
+
+      const newStock = (current?.current_stock || 0) + quantity;
+
+      const updateData: any = { 
+        current_stock: newStock,
+        updated_at: new Date().toISOString(),
+      };
+      if (cost_per_unit) updateData.cost_per_unit = cost_per_unit;
+
+      await supabase
+        .from('inventory_products')
+        .update(updateData)
+        .eq('id', id);
+
+      // Log the transaction
+      await supabase
+        .from('inventory_transactions')
+        .insert({
+          product_id: id,
+          transaction_type: 'receive',
+          quantity,
+          lot_number: lot_number || null,
+          notes: notes || null,
+        });
+
+      return NextResponse.json({ success: true, message: 'Stock received', newStock });
+    }
+
+    // Regular UPDATE
+    const update: any = {};
+    if (data.name !== undefined) update.name = data.name;
+    if (data.brand !== undefined) update.brand = data.brand;
+    if (data.category !== undefined) update.category = data.category;
+    if (data.sku !== undefined) update.sku = data.sku;
+    if (data.reorder_point !== undefined) update.reorder_point = data.reorder_point;
+    if (data.price_per_unit !== undefined) update.price_per_unit = data.price_per_unit;
+    if (data.cost_per_unit !== undefined) update.cost_per_unit = data.cost_per_unit;
+    update.updated_at = new Date().toISOString();
+
+    const { error } = await supabase
+      .from('inventory_products')
+      .update(update)
+      .eq('id', id);
+
+    if (error) {
+      console.error('Product update error:', error);
+      return NextResponse.json({ error: 'Failed to update product' }, { status: 500 });
+    }
+
+    return NextResponse.json({ success: true, message: 'Product updated' });
+  } catch (error) {
+    console.error('Inventory PUT error:', error);
+    return NextResponse.json({ error: 'Failed to update' }, { status: 500 });
+  }
+}
+
+// DELETE /api/inventory - Soft delete product
+export async function DELETE(request: NextRequest) {
+  try {
+    const supabase = createServerSupabaseClient();
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get('id');
+
+    if (!id) {
+      return NextResponse.json({ error: 'Product ID is required' }, { status: 400 });
+    }
+
+    const { error } = await supabase
+      .from('inventory_products')
+      .update({ is_active: false, updated_at: new Date().toISOString() })
+      .eq('id', id);
+
+    if (error) {
+      console.error('Product delete error:', error);
+      return NextResponse.json({ error: 'Failed to delete product' }, { status: 500 });
+    }
+
+    return NextResponse.json({ success: true, message: 'Product deleted' });
+  } catch (error) {
+    console.error('Inventory DELETE error:', error);
+    return NextResponse.json({ error: 'Failed to delete' }, { status: 500 });
   }
 }

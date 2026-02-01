@@ -21,6 +21,24 @@ export default function GiftCardsPage() {
   const [showRedeemModal, setShowRedeemModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
+  const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [selectedCard, setSelectedCard] = useState<any>(null);
+
+  // Form for creating gift card
+  const [createForm, setCreateForm] = useState({
+    initial_amount: 50,
+    recipient_name: '',
+    recipient_email: '',
+    purchaser_name: '',
+    message: '',
+  });
+
+  // Form for redeeming
+  const [redeemForm, setRedeemForm] = useState({
+    code: '',
+    amount: 0,
+  });
 
   // Fetch gift cards from API
   useEffect(() => {
@@ -58,6 +76,88 @@ export default function GiftCardsPage() {
     return matchesSearch && matchesStatus;
   });
 
+  // Create gift card
+  const handleCreateGiftCard = async () => {
+    if (createForm.initial_amount <= 0) return;
+    setSaving(true);
+    try {
+      const res = await fetch('/api/gift-cards', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(createForm),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setMessage({ type: 'success', text: `Gift card created! Code: ${data.giftCard?.code}` });
+        setShowSellModal(false);
+        setCreateForm({ initial_amount: 50, recipient_name: '', recipient_email: '', purchaser_name: '', message: '' });
+        // Refresh list
+        const refreshRes = await fetch('/api/gift-cards');
+        const refreshData = await refreshRes.json();
+        setGiftCards(refreshData.giftCards || []);
+      } else {
+        const data = await res.json();
+        setMessage({ type: 'error', text: data.error || 'Failed to create gift card' });
+      }
+    } catch (err) {
+      setMessage({ type: 'error', text: 'Failed to create gift card' });
+    }
+    setSaving(false);
+    setTimeout(() => setMessage(null), 5000);
+  };
+
+  // Redeem gift card
+  const handleRedeemGiftCard = async () => {
+    if (!redeemForm.code || redeemForm.amount <= 0) return;
+    setSaving(true);
+    try {
+      const res = await fetch('/api/gift-cards', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          code: redeemForm.code,
+          action: 'redeem',
+          amount: redeemForm.amount,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setMessage({ type: 'success', text: `Redeemed $${redeemForm.amount}! New balance: $${data.newBalance}` });
+        setShowRedeemModal(false);
+        setRedeemForm({ code: '', amount: 0 });
+        // Refresh
+        const refreshRes = await fetch('/api/gift-cards');
+        const refreshData = await refreshRes.json();
+        setGiftCards(refreshData.giftCards || []);
+      } else {
+        setMessage({ type: 'error', text: data.error || 'Failed to redeem' });
+      }
+    } catch (err) {
+      setMessage({ type: 'error', text: 'Failed to redeem gift card' });
+    }
+    setSaving(false);
+    setTimeout(() => setMessage(null), 5000);
+  };
+
+  // Void gift card
+  const handleVoidCard = async (card: any) => {
+    if (!window.confirm(`Void gift card ${card.code}? This will set the balance to $0 and cannot be undone.`)) return;
+    try {
+      const res = await fetch('/api/gift-cards', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: card.id, action: 'void' }),
+      });
+      if (res.ok) {
+        setMessage({ type: 'success', text: 'Gift card voided' });
+        setGiftCards(prev => prev.map(gc => gc.id === card.id ? { ...gc, status: 'voided', current_balance: 0 } : gc));
+      }
+    } catch (err) {
+      setMessage({ type: 'error', text: 'Failed to void card' });
+    }
+    setTimeout(() => setMessage(null), 3000);
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -82,10 +182,10 @@ export default function GiftCardsPage() {
         </div>
       </div>
 
-      {/* Connection Status */}
-      {false && (
-        <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-800">
-          Demo Mode - Connect Supabase to manage gift cards
+      {/* Message */}
+      {message && (
+        <div className={`p-4 rounded-lg ${message.type === 'success' ? 'bg-green-50 text-green-800 border border-green-200' : 'bg-red-50 text-red-800 border border-red-200'}`}>
+          {message.text}
         </div>
       )}
 
@@ -220,11 +320,27 @@ export default function GiftCardsPage() {
                       {gc.expires_at ? new Date(gc.expires_at).toLocaleDateString() : '-'}
                     </td>
                     <td className="px-5 py-3">
-                      {gc.status === 'active' && gc.current_balance > 0 && (
-                        <button className="px-3 py-1.5 text-sm font-medium text-pink-600 hover:bg-pink-50 rounded-lg">
-                          Redeem
-                        </button>
-                      )}
+                      <div className="flex items-center gap-1">
+                        {gc.status === 'active' && gc.current_balance > 0 && (
+                          <button 
+                            onClick={() => {
+                              setRedeemForm({ code: gc.code, amount: gc.current_balance });
+                              setShowRedeemModal(true);
+                            }}
+                            className="px-2 py-1 text-sm font-medium text-pink-600 hover:bg-pink-50 rounded"
+                          >
+                            Redeem
+                          </button>
+                        )}
+                        {gc.status === 'active' && (
+                          <button 
+                            onClick={() => handleVoidCard(gc)}
+                            className="px-2 py-1 text-sm text-gray-400 hover:text-red-600 hover:bg-red-50 rounded"
+                          >
+                            Void
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))
@@ -234,49 +350,130 @@ export default function GiftCardsPage() {
         </div>
       </div>
 
-      {/* Sell Modal Placeholder */}
+      {/* Create Gift Card Modal */}
       {showSellModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl max-w-md w-full p-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">Sell Gift Card</h2>
-            <p className="text-gray-500 mb-4">Gift card sales are processed through the POS terminal.</p>
-            <div className="flex gap-3">
+          <div className="bg-white rounded-xl max-w-md w-full">
+            <div className="p-6 border-b border-gray-100">
+              <h2 className="text-xl font-bold text-gray-900">Create Gift Card</h2>
+            </div>
+            <div className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Amount *</label>
+                <div className="flex gap-2">
+                  {[25, 50, 100, 150, 200].map(amt => (
+                    <button
+                      key={amt}
+                      type="button"
+                      onClick={() => setCreateForm({...createForm, initial_amount: amt})}
+                      className={`px-3 py-2 rounded-lg border ${createForm.initial_amount === amt ? 'border-pink-500 bg-pink-50 text-pink-700' : 'border-gray-200 text-gray-700'}`}
+                    >
+                      ${amt}
+                    </button>
+                  ))}
+                </div>
+                <input
+                  type="number"
+                  value={createForm.initial_amount}
+                  onChange={(e) => setCreateForm({...createForm, initial_amount: parseInt(e.target.value) || 0})}
+                  className="w-full px-4 py-2 border border-gray-200 rounded-lg mt-2"
+                  placeholder="Custom amount"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Recipient Name</label>
+                <input
+                  type="text"
+                  value={createForm.recipient_name}
+                  onChange={(e) => setCreateForm({...createForm, recipient_name: e.target.value})}
+                  className="w-full px-4 py-2 border border-gray-200 rounded-lg"
+                  placeholder="Who is this for?"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Recipient Email</label>
+                <input
+                  type="email"
+                  value={createForm.recipient_email}
+                  onChange={(e) => setCreateForm({...createForm, recipient_email: e.target.value})}
+                  className="w-full px-4 py-2 border border-gray-200 rounded-lg"
+                  placeholder="Email to send gift card code"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Purchaser Name</label>
+                <input
+                  type="text"
+                  value={createForm.purchaser_name}
+                  onChange={(e) => setCreateForm({...createForm, purchaser_name: e.target.value})}
+                  className="w-full px-4 py-2 border border-gray-200 rounded-lg"
+                  placeholder="Who purchased this?"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Message (optional)</label>
+                <textarea
+                  value={createForm.message}
+                  onChange={(e) => setCreateForm({...createForm, message: e.target.value})}
+                  className="w-full px-4 py-2 border border-gray-200 rounded-lg"
+                  rows={2}
+                  placeholder="Personal message..."
+                />
+              </div>
+            </div>
+            <div className="p-6 border-t border-gray-100 flex justify-end gap-3">
+              <button onClick={() => setShowSellModal(false)} className="px-4 py-2 text-gray-700 font-medium hover:bg-gray-100 rounded-lg">Cancel</button>
               <button
-                onClick={() => setShowSellModal(false)}
-                className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+                onClick={handleCreateGiftCard}
+                disabled={saving || createForm.initial_amount <= 0}
+                className="px-6 py-2 bg-pink-500 text-white font-medium rounded-lg hover:bg-pink-600 disabled:opacity-50"
               >
-                Cancel
+                {saving ? 'Creating...' : `Create $${createForm.initial_amount} Gift Card`}
               </button>
-              <a
-                href="/pos/gift-card"
-                className="flex-1 px-4 py-2 bg-pink-500 text-white rounded-lg hover:bg-pink-600 text-center"
-              >
-                Open POS
-              </a>
             </div>
           </div>
         </div>
       )}
 
-      {/* Redeem Modal Placeholder */}
+      {/* Redeem Gift Card Modal */}
       {showRedeemModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl max-w-md w-full p-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">Redeem Gift Card</h2>
-            <p className="text-gray-500 mb-4">Gift card redemption is handled during checkout in the POS terminal.</p>
-            <div className="flex gap-3">
+          <div className="bg-white rounded-xl max-w-md w-full">
+            <div className="p-6 border-b border-gray-100">
+              <h2 className="text-xl font-bold text-gray-900">Redeem Gift Card</h2>
+            </div>
+            <div className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Gift Card Code *</label>
+                <input
+                  type="text"
+                  value={redeemForm.code}
+                  onChange={(e) => setRedeemForm({...redeemForm, code: e.target.value.toUpperCase()})}
+                  className="w-full px-4 py-2 border border-gray-200 rounded-lg font-mono"
+                  placeholder="HG-XXXXXXXX"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Amount to Redeem *</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={redeemForm.amount || ''}
+                  onChange={(e) => setRedeemForm({...redeemForm, amount: parseFloat(e.target.value) || 0})}
+                  className="w-full px-4 py-2 border border-gray-200 rounded-lg"
+                  placeholder="0.00"
+                />
+              </div>
+            </div>
+            <div className="p-6 border-t border-gray-100 flex justify-end gap-3">
+              <button onClick={() => setShowRedeemModal(false)} className="px-4 py-2 text-gray-700 font-medium hover:bg-gray-100 rounded-lg">Cancel</button>
               <button
-                onClick={() => setShowRedeemModal(false)}
-                className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+                onClick={handleRedeemGiftCard}
+                disabled={saving || !redeemForm.code || redeemForm.amount <= 0}
+                className="px-6 py-2 bg-pink-500 text-white font-medium rounded-lg hover:bg-pink-600 disabled:opacity-50"
               >
-                Cancel
+                {saving ? 'Redeeming...' : `Redeem $${redeemForm.amount || 0}`}
               </button>
-              <a
-                href="/pos"
-                className="flex-1 px-4 py-2 bg-pink-500 text-white rounded-lg hover:bg-pink-600 text-center"
-              >
-                Open POS
-              </a>
             </div>
           </div>
         </div>

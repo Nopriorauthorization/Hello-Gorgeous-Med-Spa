@@ -1,22 +1,16 @@
 // ============================================================
-// API: GET ALL PROVIDERS (bypasses RLS with service role)
+// API: PROVIDERS - Full CRUD
+// Manage bookable providers/staff
 // ============================================================
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/hgos/supabase';
 
-// Define the ONLY active providers for Hello Gorgeous
-// These are the real providers who should appear on calendars and booking
-const ACTIVE_PROVIDER_NAMES = [
-  { first: 'Danielle', lastMatch: ['Alcala', 'Glazier'] },  // Matches "Alcala", "Glazier-Alcala", etc.
-  { first: 'Ryan', lastMatch: ['Kent'] },
-];
-
-export async function GET(request: NextRequest) {
+// GET /api/providers - List all providers
+export async function GET() {
   try {
     const supabase = createServerSupabaseClient();
-    
-    // Fetch all providers with user info
+
     const { data: providers, error } = await supabase
       .from('providers')
       .select(`
@@ -25,72 +19,149 @@ export async function GET(request: NextRequest) {
         credentials,
         color_hex,
         is_active,
-        users!inner(first_name, last_name, email)
+        users!inner(id, first_name, last_name, email)
       `)
-      .eq('is_active', true);
+      .order('is_active', { ascending: false })
+      .order('created_at', { ascending: true });
 
     if (error) {
-      console.error('Error fetching providers:', error);
-      
-      // Return fallback providers
-      return NextResponse.json({
-        providers: [
-          { id: 'danielle-001', first_name: 'Danielle', last_name: 'Alcala', credentials: 'Owner & Aesthetic Specialist', color_hex: '#EC4899' },
-          { id: 'ryan-001', first_name: 'Ryan', last_name: 'Kent', credentials: 'APRN, FNP-BC', color_hex: '#8B5CF6' },
-        ],
-        fallback: true,
-      });
+      console.error('Providers fetch error:', error);
+      return NextResponse.json({ providers: [] });
     }
 
-    // Flatten the data and FILTER to only show Ryan and Danielle
-    const flatProviders = (providers || [])
-      .map((p: any) => ({
-        id: p.id,
-        user_id: p.user_id,
-        first_name: p.users?.first_name,
-        last_name: p.users?.last_name,
-        email: p.users?.email,
-        credentials: p.credentials,
-        color_hex: p.color_hex,
-        is_active: p.is_active,
-      }))
-      .filter((p: any) => {
-        // Only include providers whose names match our active list
-        if (!p.first_name) return false;
-        const firstName = p.first_name.toLowerCase();
-        const lastName = (p.last_name || '').toLowerCase();
-        
-        return ACTIVE_PROVIDER_NAMES.some(active => {
-          const firstMatch = firstName.includes(active.first.toLowerCase());
-          const lastMatch = active.lastMatch.some(
-            (lm: string) => lastName.includes(lm.toLowerCase())
-          );
-          return firstMatch && lastMatch;
-        });
-      });
+    // Flatten the data
+    const formatted = (providers || []).map(p => ({
+      id: p.id,
+      user_id: p.user_id,
+      first_name: p.users?.first_name,
+      last_name: p.users?.last_name,
+      email: p.users?.email,
+      credentials: p.credentials,
+      color_hex: p.color_hex || '#EC4899',
+      is_active: p.is_active,
+    }));
 
-    // If filtering resulted in no providers, return the fallback
-    if (flatProviders.length === 0) {
-      return NextResponse.json({
-        providers: [
-          { id: 'danielle-001', first_name: 'Danielle', last_name: 'Alcala', credentials: 'Owner & Aesthetic Specialist', color_hex: '#EC4899' },
-          { id: 'ryan-001', first_name: 'Ryan', last_name: 'Kent', credentials: 'APRN, FNP-BC', color_hex: '#8B5CF6' },
-        ],
-        fallback: true,
-      });
-    }
-
-    return NextResponse.json({ providers: flatProviders });
+    return NextResponse.json({ providers: formatted });
   } catch (error) {
-    console.error('Providers API error:', error);
-    
-    // Return fallback on any error
-    return NextResponse.json({
-      providers: [
-        { id: 'danielle-001', first_name: 'Danielle', last_name: 'Alcala', credentials: 'Owner & Aesthetic Specialist', color_hex: '#EC4899' },
-        { id: 'ryan-001', first_name: 'Ryan', last_name: 'Kent', credentials: 'APRN, FNP-BC', color_hex: '#8B5CF6' },
-      ],
-      fallback: true,
-    });
+    console.error('Providers GET error:', error);
+    return NextResponse.json({ providers: [] });
+  }
+}
+
+// POST /api/providers - Create new provider
+export async function POST(request: NextRequest) {
+  try {
+    const supabase = createServerSupabaseClient();
+    const body = await request.json();
+
+    const { user_id, credentials, color_hex } = body;
+
+    if (!user_id) {
+      return NextResponse.json({ error: 'user_id is required' }, { status: 400 });
+    }
+
+    // Check if already a provider
+    const { data: existing } = await supabase
+      .from('providers')
+      .select('id')
+      .eq('user_id', user_id)
+      .single();
+
+    if (existing) {
+      // Reactivate if exists
+      const { error } = await supabase
+        .from('providers')
+        .update({ is_active: true, credentials, color_hex })
+        .eq('id', existing.id);
+
+      if (error) throw error;
+      return NextResponse.json({ success: true, message: 'Provider reactivated' });
+    }
+
+    // Create new provider
+    const { data: newProvider, error } = await supabase
+      .from('providers')
+      .insert({
+        user_id,
+        credentials: credentials || null,
+        color_hex: color_hex || '#EC4899',
+        is_active: true,
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Provider create error:', error);
+      return NextResponse.json({ error: 'Failed to create provider' }, { status: 500 });
+    }
+
+    return NextResponse.json({ success: true, provider: newProvider });
+  } catch (error) {
+    console.error('Providers POST error:', error);
+    return NextResponse.json({ error: 'Failed to create provider' }, { status: 500 });
+  }
+}
+
+// PUT /api/providers - Update provider
+export async function PUT(request: NextRequest) {
+  try {
+    const supabase = createServerSupabaseClient();
+    const body = await request.json();
+
+    const { id, credentials, color_hex, is_active } = body;
+
+    if (!id) {
+      return NextResponse.json({ error: 'id is required' }, { status: 400 });
+    }
+
+    const update: any = {};
+    if (credentials !== undefined) update.credentials = credentials;
+    if (color_hex !== undefined) update.color_hex = color_hex;
+    if (is_active !== undefined) update.is_active = is_active;
+    update.updated_at = new Date().toISOString();
+
+    const { error } = await supabase
+      .from('providers')
+      .update(update)
+      .eq('id', id);
+
+    if (error) {
+      console.error('Provider update error:', error);
+      return NextResponse.json({ error: 'Failed to update provider' }, { status: 500 });
+    }
+
+    return NextResponse.json({ success: true, message: 'Provider updated' });
+  } catch (error) {
+    console.error('Providers PUT error:', error);
+    return NextResponse.json({ error: 'Failed to update provider' }, { status: 500 });
+  }
+}
+
+// DELETE /api/providers - Soft delete (deactivate) provider
+export async function DELETE(request: NextRequest) {
+  try {
+    const supabase = createServerSupabaseClient();
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get('id');
+
+    if (!id) {
+      return NextResponse.json({ error: 'id is required' }, { status: 400 });
+    }
+
+    // Soft delete - just deactivate
+    const { error } = await supabase
+      .from('providers')
+      .update({ is_active: false, updated_at: new Date().toISOString() })
+      .eq('id', id);
+
+    if (error) {
+      console.error('Provider delete error:', error);
+      return NextResponse.json({ error: 'Failed to remove provider' }, { status: 500 });
+    }
+
+    return NextResponse.json({ success: true, message: 'Provider removed' });
+  } catch (error) {
+    console.error('Providers DELETE error:', error);
+    return NextResponse.json({ error: 'Failed to remove provider' }, { status: 500 });
   }
 }

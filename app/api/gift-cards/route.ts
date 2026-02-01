@@ -1,46 +1,34 @@
 // ============================================================
-// GIFT CARDS API
-// CRUD operations for gift cards
+// API: GIFT CARDS - Full CRUD
+// Create, redeem, void gift cards
 // ============================================================
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { createServerSupabaseClient } from '@/lib/hgos/supabase';
 
-// Generate unique gift card code
+// Generate random gift card code
 function generateCode(): string {
-  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // Avoid confusing characters
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
   let code = 'HG-';
-  for (let i = 0; i < 4; i++) {
-    code += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  code += '-';
-  for (let i = 0; i < 4; i++) {
+  for (let i = 0; i < 8; i++) {
     code += chars.charAt(Math.floor(Math.random() * chars.length));
   }
   return code;
 }
 
-// GET /api/gift-cards - List gift cards
+// GET /api/gift-cards - List all gift cards
 export async function GET(request: NextRequest) {
-  const supabase = createServerSupabaseClient();
-  if (!supabase) {
-    return NextResponse.json({ error: 'Database not configured' }, { status: 500 });
-  }
-
-  const searchParams = request.nextUrl.searchParams;
-  const status = searchParams.get('status');
-  const search = searchParams.get('search');
-  const code = searchParams.get('code'); // For looking up specific card
-
   try {
+    const supabase = createServerSupabaseClient();
+    const { searchParams } = new URL(request.url);
+    
+    const status = searchParams.get('status');
+    const search = searchParams.get('search');
+
     let query = supabase
       .from('gift_cards')
       .select('*')
       .order('created_at', { ascending: false });
-
-    if (code) {
-      query = query.eq('code', code.toUpperCase());
-    }
 
     if (status && status !== 'all') {
       query = query.eq('status', status);
@@ -50,50 +38,37 @@ export async function GET(request: NextRequest) {
       query = query.or(`code.ilike.%${search}%,recipient_name.ilike.%${search}%,recipient_email.ilike.%${search}%`);
     }
 
-    const { data, error } = await query;
+    const { data: giftCards, error } = await query;
 
-    if (error) throw error;
+    if (error) {
+      console.error('Gift cards fetch error:', error);
+      return NextResponse.json({ giftCards: [] });
+    }
 
-    // Calculate stats
-    const cards = data || [];
-    const stats = {
-      activeCount: cards.filter(c => c.status === 'active').length,
-      totalLiability: cards.filter(c => c.status === 'active').reduce((sum, c) => sum + (c.current_balance || 0), 0),
-      totalSold: cards.reduce((sum, c) => sum + (c.initial_amount || 0), 0),
-      redeemedCount: cards.filter(c => c.status === 'redeemed').length,
-    };
-
-    return NextResponse.json({ giftCards: cards, stats });
+    return NextResponse.json({ giftCards: giftCards || [] });
   } catch (error) {
-    console.error('Error fetching gift cards:', error);
-    return NextResponse.json({ error: 'Failed to fetch gift cards' }, { status: 500 });
+    console.error('Gift cards GET error:', error);
+    return NextResponse.json({ giftCards: [] });
   }
 }
 
-// POST /api/gift-cards - Create/sell new gift card
+// POST /api/gift-cards - Create new gift card
 export async function POST(request: NextRequest) {
-  const supabase = createServerSupabaseClient();
-  if (!supabase) {
-    return NextResponse.json({ error: 'Database not configured' }, { status: 500 });
-  }
-
   try {
+    const supabase = createServerSupabaseClient();
     const body = await request.json();
-    const {
-      amount,
-      recipient_name,
-      recipient_email,
-      recipient_phone,
-      gift_message,
+
+    const { 
+      initial_amount, 
+      recipient_name, 
+      recipient_email, 
       purchaser_name,
-      purchaser_email,
-      purchaser_client_id,
-      sold_by,
-      expires_months = 24, // Default 2 year expiration
+      message,
+      expires_at 
     } = body;
 
-    if (!amount || amount < 10) {
-      return NextResponse.json({ error: 'Minimum gift card amount is $10' }, { status: 400 });
+    if (!initial_amount || initial_amount <= 0) {
+      return NextResponse.json({ error: 'Valid amount is required' }, { status: 400 });
     }
 
     // Generate unique code
@@ -111,138 +86,149 @@ export async function POST(request: NextRequest) {
       attempts++;
     }
 
-    // Calculate expiration
-    const expiresAt = new Date();
-    expiresAt.setMonth(expiresAt.getMonth() + expires_months);
+    // Default expiration: 1 year from now
+    const defaultExpiration = new Date();
+    defaultExpiration.setFullYear(defaultExpiration.getFullYear() + 1);
 
-    const { data, error } = await supabase
+    const { data: giftCard, error } = await supabase
       .from('gift_cards')
       .insert({
         code,
-        initial_amount: amount,
-        current_balance: amount,
+        initial_amount,
+        current_balance: initial_amount,
+        recipient_name: recipient_name || null,
+        recipient_email: recipient_email || null,
+        purchaser_name: purchaser_name || null,
+        message: message || null,
         status: 'active',
-        recipient_name,
-        recipient_email,
-        recipient_phone,
-        gift_message,
-        purchaser_name,
-        purchaser_email,
-        purchaser_client_id,
-        sold_by,
-        expires_at: expiresAt.toISOString(),
+        expires_at: expires_at || defaultExpiration.toISOString(),
       })
       .select()
       .single();
 
-    if (error) throw error;
+    if (error) {
+      console.error('Gift card create error:', error);
+      return NextResponse.json({ error: 'Failed to create gift card' }, { status: 500 });
+    }
 
-    // Record initial transaction
-    await supabase
-      .from('gift_card_transactions')
-      .insert({
-        gift_card_id: data.id,
-        transaction_type: 'purchase',
-        amount,
-        balance_before: 0,
-        balance_after: amount,
-        performed_by: sold_by,
-        notes: `Gift card purchased for ${recipient_name || 'recipient'}`,
-      });
-
-    return NextResponse.json({ giftCard: data }, { status: 201 });
+    return NextResponse.json({ success: true, giftCard });
   } catch (error) {
-    console.error('Error creating gift card:', error);
+    console.error('Gift cards POST error:', error);
     return NextResponse.json({ error: 'Failed to create gift card' }, { status: 500 });
   }
 }
 
-// PATCH /api/gift-cards - Redeem gift card
-export async function PATCH(request: NextRequest) {
-  const supabase = createServerSupabaseClient();
-  if (!supabase) {
-    return NextResponse.json({ error: 'Database not configured' }, { status: 500 });
-  }
-
+// PUT /api/gift-cards - Update gift card (redeem, void, etc)
+export async function PUT(request: NextRequest) {
   try {
+    const supabase = createServerSupabaseClient();
     const body = await request.json();
-    const {
-      code,
-      redeem_amount,
-      appointment_id,
-      transaction_id,
-      performed_by,
-      notes,
-    } = body;
 
-    if (!code || !redeem_amount) {
-      return NextResponse.json({ error: 'Code and redeem amount required' }, { status: 400 });
+    const { id, code, action, amount, ...data } = body;
+
+    // Find by ID or code
+    let giftCard;
+    if (id) {
+      const { data: gc } = await supabase
+        .from('gift_cards')
+        .select('*')
+        .eq('id', id)
+        .single();
+      giftCard = gc;
+    } else if (code) {
+      const { data: gc } = await supabase
+        .from('gift_cards')
+        .select('*')
+        .eq('code', code.toUpperCase())
+        .single();
+      giftCard = gc;
     }
 
-    // Find gift card
-    const { data: card, error: findError } = await supabase
-      .from('gift_cards')
-      .select('*')
-      .eq('code', code.toUpperCase())
-      .single();
-
-    if (findError || !card) {
+    if (!giftCard) {
       return NextResponse.json({ error: 'Gift card not found' }, { status: 404 });
     }
 
-    if (card.status !== 'active') {
-      return NextResponse.json({ error: `Gift card is ${card.status}` }, { status: 400 });
-    }
+    // REDEEM action
+    if (action === 'redeem') {
+      if (!amount || amount <= 0) {
+        return NextResponse.json({ error: 'Valid redemption amount required' }, { status: 400 });
+      }
 
-    if (card.expires_at && new Date(card.expires_at) < new Date()) {
-      return NextResponse.json({ error: 'Gift card has expired' }, { status: 400 });
-    }
+      if (giftCard.status !== 'active') {
+        return NextResponse.json({ error: 'Gift card is not active' }, { status: 400 });
+      }
 
-    if (redeem_amount > card.current_balance) {
+      if (amount > giftCard.current_balance) {
+        return NextResponse.json({ error: 'Insufficient balance' }, { status: 400 });
+      }
+
+      const newBalance = giftCard.current_balance - amount;
+      const newStatus = newBalance <= 0 ? 'redeemed' : 'active';
+
+      const { error } = await supabase
+        .from('gift_cards')
+        .update({
+          current_balance: newBalance,
+          status: newStatus,
+          last_used_at: new Date().toISOString(),
+        })
+        .eq('id', giftCard.id);
+
+      if (error) throw error;
+
+      // Log transaction
+      await supabase
+        .from('gift_card_transactions')
+        .insert({
+          gift_card_id: giftCard.id,
+          transaction_type: 'redemption',
+          amount: -amount,
+          balance_after: newBalance,
+        });
+
       return NextResponse.json({ 
-        error: 'Insufficient balance',
-        available: card.current_balance,
-      }, { status: 400 });
+        success: true, 
+        message: `Redeemed $${amount}`,
+        newBalance,
+        status: newStatus,
+      });
     }
 
-    const newBalance = card.current_balance - redeem_amount;
-    const newStatus = newBalance === 0 ? 'redeemed' : 'active';
+    // VOID action
+    if (action === 'void') {
+      const { error } = await supabase
+        .from('gift_cards')
+        .update({
+          status: 'voided',
+          current_balance: 0,
+          voided_at: new Date().toISOString(),
+          void_reason: data.reason || 'Voided by admin',
+        })
+        .eq('id', giftCard.id);
 
-    // Update card
-    const { error: updateError } = await supabase
-      .from('gift_cards')
-      .update({
-        current_balance: newBalance,
-        status: newStatus,
-        last_used_at: new Date().toISOString(),
-      })
-      .eq('id', card.id);
+      if (error) throw error;
 
-    if (updateError) throw updateError;
+      return NextResponse.json({ success: true, message: 'Gift card voided' });
+    }
 
-    // Record transaction
-    await supabase
-      .from('gift_card_transactions')
-      .insert({
-        gift_card_id: card.id,
-        transaction_type: 'redemption',
-        amount: -redeem_amount,
-        balance_before: card.current_balance,
-        balance_after: newBalance,
-        related_transaction_id: transaction_id,
-        appointment_id,
-        performed_by,
-        notes,
-      });
+    // Regular UPDATE (edit details)
+    const update: any = {};
+    if (data.recipient_name !== undefined) update.recipient_name = data.recipient_name;
+    if (data.recipient_email !== undefined) update.recipient_email = data.recipient_email;
+    if (data.expires_at !== undefined) update.expires_at = data.expires_at;
 
-    return NextResponse.json({
-      success: true,
-      amountRedeemed: redeem_amount,
-      newBalance,
-      status: newStatus,
-    });
+    if (Object.keys(update).length > 0) {
+      const { error } = await supabase
+        .from('gift_cards')
+        .update(update)
+        .eq('id', giftCard.id);
+
+      if (error) throw error;
+    }
+
+    return NextResponse.json({ success: true, message: 'Gift card updated' });
   } catch (error) {
-    console.error('Error redeeming gift card:', error);
-    return NextResponse.json({ error: 'Failed to redeem gift card' }, { status: 500 });
+    console.error('Gift cards PUT error:', error);
+    return NextResponse.json({ error: 'Failed to update gift card' }, { status: 500 });
   }
 }

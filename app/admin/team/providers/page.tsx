@@ -80,76 +80,135 @@ export default function ProviderManagementPage() {
     fetchData();
   }, []);
 
-  // Toggle provider active status (placeholder - would need providers API PUT)
+  // Toggle provider active status
   const toggleActive = async (provider: Provider) => {
-    // Update locally for now
-    setProviders(prev => prev.map(p => 
-      p.id === provider.id ? { ...p, is_active: !p.is_active } : p
-    ));
-
-    setMessage({ 
-      type: 'success', 
-      text: `${provider.name} ${!provider.is_active ? 'activated' : 'deactivated'}` 
-    });
+    try {
+      const res = await fetch('/api/providers', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: provider.id, is_active: !provider.is_active }),
+      });
+      
+      if (res.ok) {
+        setProviders(prev => prev.map(p => 
+          p.id === provider.id ? { ...p, is_active: !p.is_active } : p
+        ));
+        setMessage({ 
+          type: 'success', 
+          text: `${provider.name} ${!provider.is_active ? 'activated' : 'deactivated'}` 
+        });
+      } else {
+        setMessage({ type: 'error', text: 'Failed to update provider' });
+      }
+    } catch (err) {
+      setMessage({ type: 'error', text: 'Failed to update provider' });
+    }
     setTimeout(() => setMessage(null), 3000);
   };
 
-  // Update provider details (placeholder)
+  // Update provider details
   const updateProvider = async () => {
     if (!editingProvider) return;
 
     setSaving(true);
-    
-    // Update locally
-    setProviders(prev => prev.map(p => 
-      p.id === editingProvider.id 
-        ? { ...p, credentials: formData.credentials, color: formData.color }
-        : p
-    ));
-
-    setMessage({ type: 'success', text: 'Provider updated!' });
-    setEditingProvider(null);
+    try {
+      const res = await fetch('/api/providers', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          id: editingProvider.id, 
+          credentials: formData.credentials, 
+          color_hex: formData.color 
+        }),
+      });
+      
+      if (res.ok) {
+        setProviders(prev => prev.map(p => 
+          p.id === editingProvider.id 
+            ? { ...p, credentials: formData.credentials, color: formData.color }
+            : p
+        ));
+        setMessage({ type: 'success', text: 'Provider updated!' });
+        setEditingProvider(null);
+      } else {
+        setMessage({ type: 'error', text: 'Failed to update provider' });
+      }
+    } catch (err) {
+      setMessage({ type: 'error', text: 'Failed to update provider' });
+    }
     setTimeout(() => setMessage(null), 3000);
     setSaving(false);
   };
 
-  // Add new provider (placeholder)
+  // Add new provider
   const addProvider = async () => {
-    if (!formData.name) return;
+    if (!formData.user_id && !formData.name) return;
 
     setSaving(true);
-
-    // Add locally
-    const newProvider: Provider = {
-      id: `new-${Date.now()}`,
-      user_id: formData.user_id,
-      name: formData.name,
-      credentials: formData.credentials,
-      color: formData.color,
-      is_active: true,
-      is_provider: true,
-    };
-
-    setProviders(prev => [newProvider, ...prev]);
-    setMessage({ type: 'success', text: 'Provider added!' });
-    setShowAddModal(false);
-    resetForm();
+    try {
+      const res = await fetch('/api/providers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          user_id: formData.user_id, 
+          credentials: formData.credentials, 
+          color_hex: formData.color 
+        }),
+      });
+      
+      if (res.ok) {
+        // Refresh the list
+        const refreshRes = await fetch('/api/providers');
+        const data = await refreshRes.json();
+        if (data.providers) {
+          setProviders(data.providers.map((p: any) => ({
+            id: p.id,
+            user_id: p.user_id,
+            name: `${p.first_name} ${p.last_name}`,
+            email: p.email,
+            credentials: p.credentials,
+            color: p.color_hex || '#EC4899',
+            is_active: p.is_active,
+            is_provider: true,
+          })));
+        }
+        setMessage({ type: 'success', text: 'Provider added!' });
+        setShowAddModal(false);
+        resetForm();
+      } else {
+        const data = await res.json();
+        setMessage({ type: 'error', text: data.error || 'Failed to add provider' });
+      }
+    } catch (err) {
+      setMessage({ type: 'error', text: 'Failed to add provider' });
+    }
     setTimeout(() => setMessage(null), 3000);
     setSaving(false);
   };
 
-  // Remove provider (just deactivates, doesn't delete)
+  // Remove provider (deactivates)
   const removeProvider = async (provider: Provider) => {
     const confirmed = window.confirm(
       `Remove ${provider.name} as a provider?\n\nThey won't appear in booking or schedules anymore.`
     );
     if (!confirmed) return;
 
-    setProviders(prev => prev.map(p => 
-      p.id === provider.id ? { ...p, is_active: false } : p
-    ));
-
-    setMessage({ type: 'success', text: `${provider.name} removed from providers` });
+    try {
+      const res = await fetch(`/api/providers?id=${provider.id}`, {
+        method: 'DELETE',
+      });
+      
+      if (res.ok) {
+        setProviders(prev => prev.map(p => 
+          p.id === provider.id ? { ...p, is_active: false } : p
+        ));
+        setMessage({ type: 'success', text: `${provider.name} removed from providers` });
+      } else {
+        setMessage({ type: 'error', text: 'Failed to remove provider' });
+      }
+    } catch (err) {
+      setMessage({ type: 'error', text: 'Failed to remove provider' });
+    }
     setTimeout(() => setMessage(null), 3000);
   };
 

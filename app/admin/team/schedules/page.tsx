@@ -98,25 +98,62 @@ export default function ProviderSchedulesPage() {
     fetchProviders();
   }, []);
 
-  // Load schedule when provider selected (use defaults for now - schedule API can be added later)
+  // Load schedule from API when provider selected
   useEffect(() => {
     if (!selectedProvider) {
       setSchedule([]);
       return;
     }
 
-    // Use default schedule based on provider name
-    const providerKey = selectedProvider.name.toLowerCase().includes('danielle') ? 'danielle' : 'ryan';
-    const defaultSched = DEFAULT_SCHEDULES[providerKey] || DEFAULT_SCHEDULES['danielle'];
+    async function loadSchedule() {
+      try {
+        const res = await fetch(`/api/provider-schedules?provider_id=${selectedProvider.id}`);
+        const data = await res.json();
+        
+        if (data.schedules && data.schedules.length > 0) {
+          const savedSchedule = data.schedules[0].schedule;
+          const entries = DAYS.map(d => {
+            const dayName = d.name.toLowerCase();
+            const daySched = savedSchedule[dayName];
+            return {
+              day: d.day,
+              dayName: d.name,
+              isWorking: daySched?.enabled ?? false,
+              startTime: daySched?.start || '09:00',
+              endTime: daySched?.end || '17:00',
+            };
+          });
+          setSchedule(entries);
+        } else {
+          // Use defaults if no saved schedule
+          const providerKey = selectedProvider.name.toLowerCase().includes('danielle') ? 'danielle' : 'ryan';
+          const defaultSched = DEFAULT_SCHEDULES[providerKey] || DEFAULT_SCHEDULES['danielle'];
+          const entries = DAYS.map(d => ({
+            day: d.day,
+            dayName: d.name,
+            isWorking: defaultSched[d.day] !== null,
+            startTime: defaultSched[d.day]?.start || '09:00',
+            endTime: defaultSched[d.day]?.end || '17:00',
+          }));
+          setSchedule(entries);
+        }
+      } catch (err) {
+        console.error('Error loading schedule:', err);
+        // Fallback to defaults
+        const providerKey = selectedProvider.name.toLowerCase().includes('danielle') ? 'danielle' : 'ryan';
+        const defaultSched = DEFAULT_SCHEDULES[providerKey] || DEFAULT_SCHEDULES['danielle'];
+        const entries = DAYS.map(d => ({
+          day: d.day,
+          dayName: d.name,
+          isWorking: defaultSched[d.day] !== null,
+          startTime: defaultSched[d.day]?.start || '09:00',
+          endTime: defaultSched[d.day]?.end || '17:00',
+        }));
+        setSchedule(entries);
+      }
+    }
     
-    const entries = DAYS.map(d => ({
-      day: d.day,
-      dayName: d.name,
-      isWorking: defaultSched[d.day] !== null,
-      startTime: defaultSched[d.day]?.start || '09:00',
-      endTime: defaultSched[d.day]?.end || '17:00',
-    }));
-    setSchedule(entries);
+    loadSchedule();
   }, [selectedProvider]);
 
   // Update schedule entry
@@ -126,7 +163,7 @@ export default function ProviderSchedulesPage() {
     ));
   };
 
-  // Save schedule (placeholder - would need a schedules API)
+  // Save schedule to API
   const saveSchedule = async () => {
     if (!selectedProvider) {
       return;
@@ -135,11 +172,38 @@ export default function ProviderSchedulesPage() {
     setSaving(true);
     setMessage(null);
 
-    // For now, just show success - full schedule API can be added later
-    setTimeout(() => {
-      setMessage({ type: 'success', text: 'Schedule saved successfully!' });
-      setSaving(false);
-    }, 500);
+    try {
+      // Convert schedule array to object format for API
+      const scheduleObj: { [key: string]: { enabled: boolean; start: string; end: string } } = {};
+      schedule.forEach(entry => {
+        scheduleObj[entry.dayName.toLowerCase()] = {
+          enabled: entry.isWorking,
+          start: entry.startTime,
+          end: entry.endTime,
+        };
+      });
+
+      const res = await fetch('/api/provider-schedules', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          provider_id: selectedProvider.id,
+          schedule: scheduleObj,
+        }),
+      });
+
+      if (res.ok) {
+        setMessage({ type: 'success', text: 'Schedule saved successfully!' });
+      } else {
+        const data = await res.json();
+        setMessage({ type: 'error', text: data.error || 'Failed to save schedule' });
+      }
+    } catch (err) {
+      setMessage({ type: 'error', text: 'Failed to save schedule' });
+    }
+    
+    setSaving(false);
+    setTimeout(() => setMessage(null), 3000);
   };
 
   // Format time for display
