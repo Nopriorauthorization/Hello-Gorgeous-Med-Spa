@@ -26,6 +26,15 @@ export function AdminHeader() {
         </div>
 
         <div className="flex items-center gap-3">
+          <a
+            href="https://ehr.charmhealth.com/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hidden lg:inline-flex items-center gap-1.5 px-3 py-2 bg-purple-600 hover:bg-purple-500 rounded-lg text-sm font-medium transition-colors"
+          >
+            <span aria-hidden>🏥</span>
+            Charm EHR
+          </a>
           <Link
             href="/admin/appointments/new"
             className="hidden sm:inline-flex items-center gap-1.5 px-3 py-2 bg-pink-500 hover:bg-pink-600 rounded-lg text-sm font-medium transition-colors"

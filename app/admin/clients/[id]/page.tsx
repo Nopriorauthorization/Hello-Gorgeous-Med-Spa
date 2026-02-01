@@ -189,7 +189,25 @@ export default function AdminClientDetailPage({ params }: { params: { id: string
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
+          <a
+            href={`https://ehr.charmhealth.com/allpatients/list?search=${encodeURIComponent(client.first_name + ' ' + client.last_name)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="px-4 py-2 bg-purple-600 text-white font-medium rounded-lg hover:bg-purple-500 transition-colors flex items-center gap-2"
+            title="Open in Charm EHR"
+          >
+            🏥 Charm EHR
+          </a>
+          <a
+            href="https://ehr.charmhealth.com/erx"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-500 transition-colors flex items-center gap-2"
+            title="E-Prescribe"
+          >
+            💊 Prescribe
+          </a>
           <Link
             href={`/admin/appointments/new?client=${client.id}`}
             className="px-4 py-2 bg-pink-500 text-white font-medium rounded-lg hover:bg-pink-600 transition-colors"
