@@ -77,52 +77,13 @@ export default function PortalDashboard() {
   const [appointments, setAppointments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Fetch user data and appointments
+  // Portal dashboard - shows welcome state for clients
   useEffect(() => {
-    const fetchData = async () => {
-      if (false) {
-        setLoading(false);
-        return;
-      }
-
-      try {
-        // Get current user session
-        const { data: { user: authUser } } = await supabase.auth.getUser();
-        
-        if (authUser) {
-          // Fetch client profile
-          const { data: client } = await supabase
-            .from('clients')
-            .select('*')
-            .eq('user_id', authUser.id)
-            .single();
-
-          if (client) {
-            setUser({
-              firstName: client.first_name,
-              isVip: client.is_vip,
-            });
-
-            // Fetch upcoming appointments
-            const { data: appts } = await supabase
-              .from('appointments')
-              .select('*, service:services(name), provider:staff(first_name, last_name)')
-              .eq('client_id', client.id)
-              .gte('scheduled_at', new Date().toISOString())
-              .order('scheduled_at', { ascending: true })
-              .limit(3);
-
-            setAppointments(appts || []);
-          }
-        }
-      } catch (err) {
-        console.error('Error fetching portal data:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
+    // Client portal will show personalized data when client auth is implemented
+    // For now, show welcome state
+    setUser({ firstName: 'Guest', isVip: false });
+    setAppointments([]);
+    setLoading(false);
   }, []);
 
   const formatDate = (isoString: string) => {

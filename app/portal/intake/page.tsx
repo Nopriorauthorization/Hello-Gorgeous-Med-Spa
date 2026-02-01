@@ -20,65 +20,12 @@ export default function IntakeFormsPage() {
   const [upcomingAppointment, setUpcomingAppointment] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
-  // Fetch forms data
+  // Intake forms data - placeholder until client auth is implemented
   useEffect(() => {
-    const fetchData = async () => {
-      if (false) {
-        setLoading(false);
-        return;
-      }
-
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        
-        if (user) {
-          const { data: client } = await supabase
-            .from('clients')
-            .select('id')
-            .eq('user_id', user.id)
-            .single();
-
-          if (client) {
-            // Fetch completed consents
-            const { data: consents } = await supabase
-              .from('client_consents')
-              .select('*, consent_form:consent_forms(id, name)')
-              .eq('client_id', client.id);
-
-            setCompletedForms((consents || []).map(c => ({
-              formId: c.consent_form?.id,
-              completedAt: new Date(c.signed_at),
-            })));
-
-            // Fetch upcoming appointment
-            const { data: appointments } = await supabase
-              .from('appointments')
-              .select('*, service:services(id, name)')
-              .eq('client_id', client.id)
-              .gte('scheduled_at', new Date().toISOString())
-              .order('scheduled_at', { ascending: true })
-              .limit(1);
-
-            if (appointments && appointments.length > 0) {
-              const apt = appointments[0];
-              setUpcomingAppointment({
-                id: apt.id,
-                serviceId: apt.service?.id,
-                serviceName: apt.service?.name,
-                date: new Date(apt.scheduled_at).toLocaleDateString(),
-                time: new Date(apt.scheduled_at).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }),
-              });
-            }
-          }
-        }
-      } catch (err) {
-        console.error('Error fetching intake forms data:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
+    // Forms will load when logged in
+    setCompletedForms([]);
+    setUpcomingAppointment(null);
+    setLoading(false);
   }, []);
 
   // Get required forms for upcoming appointment

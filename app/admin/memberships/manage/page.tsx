@@ -79,34 +79,12 @@ export default function MembershipManagePage() {
     paused: 'bg-amber-100 text-amber-700',
   };
 
-  // Fetch memberships from database
+  // Fetch memberships - placeholder until memberships API is built
   useEffect(() => {
-    const fetchMemberships = async () => {
-      if (false) {
-        setLoading(false);
-        return;
-      }
-
-      try {
-        const { data, error } = await supabase
-          .from('memberships')
-          .select(`
-            *,
-            client:clients(first_name, last_name, email)
-          `)
-          .order('created_at', { ascending: false });
-
-        if (!error && data) {
-          setMemberships(data);
-        }
-      } catch (err) {
-        console.error('Error fetching memberships:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchMemberships();
+    // Memberships will be loaded when the memberships table and API are ready
+    // For now, show empty state
+    setMemberships([]);
+    setLoading(false);
   }, []);
 
   // Stats

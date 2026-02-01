@@ -18,49 +18,13 @@ export default function AdminMedicationsPage() {
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({ week: 0, month: 0, botoxUnits: 0, fillerSyringes: 0 });
 
-  // Fetch medications from database
+  // Fetch medications - placeholder until medications API is built
   useEffect(() => {
-    const fetchMedications = async () => {
-      if (false) {
-        setLoading(false);
-        return;
-      }
-
-      try {
-        const { data, error } = await supabase
-          .from('medications_administered')
-          .select(`
-            *,
-            client:clients(first_name, last_name),
-            provider:staff(first_name, last_name, title)
-          `)
-          .order('created_at', { ascending: false })
-          .limit(50);
-
-        if (!error && data) {
-          setMedications(data);
-          // Calculate stats from data
-          const now = new Date();
-          const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-          const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-
-          setStats({
-            week: data.filter(m => new Date(m.created_at) >= weekAgo).length,
-            month: data.filter(m => new Date(m.created_at) >= monthAgo).length,
-            botoxUnits: data.filter(m => m.medication_type === 'neurotoxin')
-              .reduce((sum, m) => sum + (m.units || 0), 0),
-            fillerSyringes: data.filter(m => m.medication_type === 'filler')
-              .reduce((sum, m) => sum + (m.syringes || 0), 0),
-          });
-        }
-      } catch (err) {
-        console.error('Error fetching medications:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchMedications();
+    // Medications tracking will be added when the medications_administered table and API are ready
+    // For now, show empty state
+    setMedications([]);
+    setStats({ week: 0, month: 0, botoxUnits: 0, fillerSyringes: 0 });
+    setLoading(false);
   }, []);
 
   const formatDate = (isoString: string) => {

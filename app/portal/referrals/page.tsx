@@ -26,63 +26,16 @@ export default function ReferralsPage() {
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
 
-  // Fetch referral data
+  // Referral program - demo code until client auth is implemented
   useEffect(() => {
-    const fetchData = async () => {
-      if (false) {
-        setLoading(false);
-        return;
-      }
-
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        
-        if (user) {
-          // Get client profile
-          const { data: clientData } = await supabase
-            .from('clients')
-            .select('id, first_name, last_name, referral_code')
-            .eq('user_id', user.id)
-            .single();
-
-          if (clientData) {
-            setClient({
-              id: clientData.id,
-              name: `${clientData.first_name} ${clientData.last_name}`,
-              referralCode: clientData.referral_code || generateCode(clientData.first_name),
-            });
-
-            // Fetch referrals
-            const { data: referralData } = await supabase
-              .from('referrals')
-              .select('*')
-              .eq('referrer_id', clientData.id)
-              .order('created_at', { ascending: false });
-
-            if (referralData) {
-              setReferrals(referralData.map((r: any) => ({
-                id: r.id,
-                referrerId: r.referrer_id,
-                referrerName: client?.name || '',
-                refereeName: r.referee_name,
-                refereeEmail: r.referee_email,
-                code: r.code,
-                status: r.status,
-                createdAt: new Date(r.created_at),
-                convertedAt: r.converted_at ? new Date(r.converted_at) : undefined,
-                rewardedAt: r.rewarded_at ? new Date(r.rewarded_at) : undefined,
-              })));
-            }
-          }
-        }
-      } catch (err) {
-        console.error('Error fetching referral data:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
+    // Set a demo referral code for display
+    setClient({
+      id: 'demo',
+      name: 'Guest',
+      referralCode: 'HGFRIEND25',
+    });
+    setReferrals([]);
+    setLoading(false);
   }, []);
 
   const generateCode = (name: string) => {

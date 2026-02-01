@@ -45,78 +45,14 @@ export default function PortalAppointmentsPage() {
   const [pastAppointments, setPastAppointments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Fetch appointments from database
+  // Fetch appointments - placeholder until client auth is implemented
   useEffect(() => {
-    const fetchAppointments = async () => {
-      if (false) {
-        setLoading(false);
-        return;
-      }
-
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        
-        if (user) {
-          // Get client ID
-          const { data: client } = await supabase
-            .from('clients')
-            .select('id')
-            .eq('user_id', user.id)
-            .single();
-
-          if (client) {
-            const now = new Date().toISOString();
-
-            // Fetch upcoming appointments
-            const { data: upcoming } = await supabase
-              .from('appointments')
-              .select('*, service:services(name, price), provider:staff(first_name, last_name)')
-              .eq('client_id', client.id)
-              .gte('scheduled_at', now)
-              .neq('status', 'cancelled')
-              .order('scheduled_at', { ascending: true });
-
-            // Fetch past appointments
-            const { data: past } = await supabase
-              .from('appointments')
-              .select('*, service:services(name), provider:staff(first_name, last_name)')
-              .eq('client_id', client.id)
-              .lt('scheduled_at', now)
-              .order('scheduled_at', { ascending: false })
-              .limit(10);
-
-            // Transform data
-            setUpcomingAppointments((upcoming || []).map(apt => ({
-              id: apt.id,
-              service: apt.service?.name || 'Service',
-              provider: `${apt.provider?.first_name || ''} ${apt.provider?.last_name || ''}`.trim(),
-              date: new Date(apt.scheduled_at).toISOString().split('T')[0],
-              time: new Date(apt.scheduled_at).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }),
-              datetime: new Date(apt.scheduled_at),
-              status: apt.status,
-              location: 'Hello Gorgeous Med Spa',
-              price: apt.service?.price || 0,
-            })));
-
-            setPastAppointments((past || []).map(apt => ({
-              id: apt.id,
-              service: apt.service?.name || 'Service',
-              provider: `${apt.provider?.first_name || ''} ${apt.provider?.last_name || ''}`.trim(),
-              date: new Date(apt.scheduled_at).toISOString().split('T')[0],
-              time: new Date(apt.scheduled_at).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }),
-              status: apt.status,
-            })));
-          }
-        }
-      } catch (err) {
-        console.error('Error fetching appointments:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchAppointments();
+    // Client appointments will load when logged in
+    setUpcomingAppointments([]);
+    setPastAppointments([]);
+    setLoading(false);
   }, []);
+
 
   // Calculate cancellation/reschedule status for each appointment
   const appointmentsWithStatus = useMemo(() => {
@@ -138,20 +74,26 @@ export default function PortalAppointmentsPage() {
   };
 
   const confirmCancel = async () => {
-    if (!selectedAppointment || false) return;
+    if (!selectedAppointment) return;
     setIsProcessing(true);
 
     try {
-      await supabase
-        .from('appointments')
-        .update({ status: 'cancelled', cancellation_reason: cancelReason })
-        .eq('id', selectedAppointment.id);
+      // Cancel via API
+      const res = await fetch(`/api/appointments/${selectedAppointment.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'cancelled', cancellation_reason: cancelReason }),
+      });
 
-      // Remove from list
-      setUpcomingAppointments(prev => prev.filter(a => a.id !== selectedAppointment.id));
-      setShowCancelModal(false);
-      setSelectedAppointment(null);
-      setCancelReason('');
+      if (res.ok) {
+        // Remove from list
+        setUpcomingAppointments(prev => prev.filter(a => a.id !== selectedAppointment.id));
+        setShowCancelModal(false);
+        setSelectedAppointment(null);
+        setCancelReason('');
+      } else {
+        console.error('Failed to cancel appointment');
+      }
     } catch (err) {
       console.error('Error cancelling appointment:', err);
     } finally {

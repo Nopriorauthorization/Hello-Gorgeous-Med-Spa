@@ -22,31 +22,12 @@ export default function GiftCardsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
 
-  // Fetch gift cards from database
+  // Fetch gift cards - placeholder until gift cards API is built
   useEffect(() => {
-    const fetchGiftCards = async () => {
-      if (false) {
-        setLoading(false);
-        return;
-      }
-
-      try {
-        const { data, error } = await supabase
-          .from('gift_cards')
-          .select('*')
-          .order('created_at', { ascending: false });
-
-        if (!error && data) {
-          setGiftCards(data);
-        }
-      } catch (err) {
-        console.error('Error fetching gift cards:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchGiftCards();
+    // Gift cards will be loaded when the gift_cards table and API are ready
+    // For now, show empty state
+    setGiftCards([]);
+    setLoading(false);
   }, []);
 
   const totalLiability = giftCards

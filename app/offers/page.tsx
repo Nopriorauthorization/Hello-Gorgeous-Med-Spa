@@ -87,33 +87,11 @@ export default function OffersPage() {
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState('all');
 
-  // Fetch offers from database
+  // Offers - placeholder until offers table is populated
   useEffect(() => {
-    const fetchOffers = async () => {
-      if (false) {
-        setLoading(false);
-        return;
-      }
-
-      try {
-        const { data, error } = await supabase
-          .from('offers')
-          .select('*')
-          .gte('ends_at', new Date().toISOString())
-          .eq('active', true)
-          .order('featured', { ascending: false });
-
-        if (!error && data) {
-          setOffers(data);
-        }
-      } catch (err) {
-        console.error('Error fetching offers:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchOffers();
+    // Special offers will load when promotions are added
+    setOffers([]);
+    setLoading(false);
   }, []);
 
   const categories = ['all', ...Array.from(new Set(offers.map(o => o.category)))];

@@ -73,67 +73,14 @@ export default function ComplianceDashboardPage() {
   const [incidents, setIncidents] = useState<Incident[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Fetch data from Supabase
+  // Compliance data - uses static checklist from legal-protection.ts
+  // Compliance tracking and incidents will be stored when APIs are built
   useEffect(() => {
-    const fetchData = async () => {
-      if (false) {
-        setLoading(false);
-        return;
-      }
-
-      try {
-        // Fetch compliance statuses
-        const { data: complianceData } = await supabase
-          .from('compliance_items')
-          .select('*');
-        
-        if (complianceData) {
-          const statusMap: Record<string, { status: ComplianceItem['status']; lastCompleted?: string; nextDue?: string }> = {};
-          complianceData.forEach((item: any) => {
-            statusMap[item.item_id] = {
-              status: item.status,
-              lastCompleted: item.last_completed,
-              nextDue: item.next_due,
-            };
-          });
-          setComplianceStatuses(statusMap);
-        }
-
-        // Fetch incidents
-        const { data: incidentData } = await supabase
-          .from('incidents')
-          .select('*')
-          .order('date_occurred', { ascending: false });
-        
-        if (incidentData) {
-          setIncidents(incidentData.map((i: any) => ({
-            id: i.id,
-            type: i.type,
-            severity: i.severity,
-            status: i.status,
-            dateOccurred: i.date_occurred,
-            timeOccurred: i.time_occurred,
-            location: i.location,
-            description: i.description,
-            clientName: i.client_name,
-            providerName: i.provider_name,
-            treatmentType: i.treatment_type,
-            immediateActions: i.immediate_actions,
-            medicalAttentionRequired: i.medical_attention_required,
-            clientNotified: i.client_notified,
-            reportedBy: i.reported_by,
-            reportedAt: i.reported_at,
-            notes: [],
-          })));
-        }
-      } catch (err) {
-        console.error('Error fetching compliance data:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
+    // For now, start with empty compliance statuses and no incidents
+    // The static COMPLIANCE_CHECKLIST provides the checklist items
+    setComplianceStatuses({});
+    setIncidents([]);
+    setLoading(false);
   }, []);
 
   // Merge checklist with status data

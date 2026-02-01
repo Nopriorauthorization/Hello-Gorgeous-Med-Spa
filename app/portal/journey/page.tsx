@@ -27,53 +27,11 @@ export default function JourneyPage() {
   const [entries, setEntries] = useState<TreatmentEntry[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Fetch journey data from appointments
+  // Journey data - placeholder until client auth is implemented
   useEffect(() => {
-    const fetchData = async () => {
-      if (false) {
-        setLoading(false);
-        return;
-      }
-
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        
-        if (user) {
-          const { data: client } = await supabase
-            .from('clients')
-            .select('id')
-            .eq('user_id', user.id)
-            .single();
-
-          if (client) {
-            // Fetch completed appointments as journey entries
-            const { data: appointments } = await supabase
-              .from('appointments')
-              .select('*, service:services(name), provider:staff(first_name, last_name)')
-              .eq('client_id', client.id)
-              .eq('status', 'completed')
-              .order('scheduled_at', { ascending: false });
-
-            if (appointments) {
-              setEntries(appointments.map((apt: any) => ({
-                id: apt.id,
-                date: apt.scheduled_at,
-                type: 'treatment' as const,
-                treatment: apt.service?.name,
-                provider: `${apt.provider?.first_name || ''} ${apt.provider?.last_name || ''}`.trim(),
-                notes: apt.notes,
-              })));
-            }
-          }
-        }
-      } catch (err) {
-        console.error('Error fetching journey data:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
+    // Journey entries will load when logged in
+    setEntries([]);
+    setLoading(false);
   }, []);
 
   const formatDate = (isoString: string) => {

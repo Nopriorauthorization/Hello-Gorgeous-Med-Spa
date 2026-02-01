@@ -37,50 +37,15 @@ export default function RewardsPage() {
   const [loading, setLoading] = useState(true);
   const [showRedeemModal, setShowRedeemModal] = useState<string | null>(null);
 
-  // Fetch loyalty data
+  // Rewards data - placeholder until client auth is implemented
   useEffect(() => {
-    const fetchData = async () => {
-      if (false) {
-        setLoading(false);
-        return;
-      }
-
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        
-        if (user) {
-          // Get client profile with points
-          const { data: client } = await supabase
-            .from('clients')
-            .select('id, loyalty_points, lifetime_points')
-            .eq('user_id', user.id)
-            .single();
-
-          if (client) {
-            setAccount({
-              currentPoints: client.loyalty_points || 0,
-              lifetimePoints: client.lifetime_points || 0,
-            });
-
-            // Fetch transactions
-            const { data: txData } = await supabase
-              .from('loyalty_transactions')
-              .select('*')
-              .eq('client_id', client.id)
-              .order('created_at', { ascending: false })
-              .limit(10);
-
-            setTransactions(txData || []);
-          }
-        }
-      } catch (err) {
-        console.error('Error fetching rewards data:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
+    // Demo rewards for display
+    setAccount({
+      currentPoints: 0,
+      lifetimePoints: 0,
+    });
+    setTransactions([]);
+    setLoading(false);
   }, []);
 
   const currentPoints = account?.currentPoints || 0;

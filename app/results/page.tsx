@@ -32,32 +32,11 @@ export default function ResultsPage() {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedResult, setSelectedResult] = useState<ResultPhoto | null>(null);
 
-  // Fetch results from database
+  // Results gallery - placeholder until results_gallery table is populated
   useEffect(() => {
-    const fetchResults = async () => {
-      if (false) {
-        setLoading(false);
-        return;
-      }
-
-      try {
-        const { data, error } = await supabase
-          .from('results_gallery')
-          .select('*')
-          .eq('approved', true)
-          .order('created_at', { ascending: false });
-
-        if (!error && data) {
-          setResults(data);
-        }
-      } catch (err) {
-        console.error('Error fetching results:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchResults();
+    // Results will load when before/after photos are added
+    setResults([]);
+    setLoading(false);
   }, []);
 
   const categories = ['all', ...Array.from(new Set(results.map(r => r.category)))];
