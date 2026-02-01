@@ -86,6 +86,28 @@ export async function POST(request: NextRequest) {
     const duration = body.duration_minutes || 30;
     const endsAt = new Date(startsAt.getTime() + duration * 60000);
 
+    // CHECK FOR DOUBLE BOOKING - Critical safety check
+    if (body.provider_id) {
+      const { data: existingAppointments, error: conflictError } = await supabase
+        .from('appointments')
+        .select('id, starts_at, ends_at')
+        .eq('provider_id', body.provider_id)
+        .neq('status', 'cancelled')
+        .neq('status', 'no_show')
+        .or(`and(starts_at.lt.${endsAt.toISOString()},ends_at.gt.${startsAt.toISOString()})`);
+
+      if (!conflictError && existingAppointments && existingAppointments.length > 0) {
+        return NextResponse.json(
+          { 
+            error: 'This provider already has an appointment at this time. Please select a different time slot.',
+            conflictType: 'double_booking',
+            conflictingAppointment: existingAppointments[0].id
+          },
+          { status: 409 }
+        );
+      }
+    }
+
     const { data, error } = await supabase
       .from('appointments')
       .insert({

@@ -2,13 +2,12 @@
 
 // ============================================================
 // ADD NEW CLIENT PAGE
-// Create a new client record - SAVES TO DATABASE
+// Create a new client record - USES API (bypasses RLS)
 // ============================================================
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { createBrowserSupabaseClient } from '@/lib/hgos/supabase';
 
 export default function NewClientPage() {
   const router = useRouter();
@@ -32,8 +31,6 @@ export default function NewClientPage() {
     sendWelcomeEmail: true,
   });
 
-  const supabase = createBrowserSupabaseClient();
-
   const updateField = (field: string, value: any) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
@@ -44,28 +41,15 @@ export default function NewClientPage() {
     setError(null);
 
     try {
-      // 1. Create user record
-      const { data: user, error: userError } = await supabase
-        .from('users')
-        .insert({
+      // Use API endpoint to create client (bypasses RLS issues)
+      const response = await fetch('/api/clients', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
           first_name: formData.firstName,
           last_name: formData.lastName,
           email: formData.email.toLowerCase(),
           phone: formData.phone,
-          role: 'client',
-        })
-        .select('id')
-        .single();
-
-      if (userError) {
-        throw new Error(userError.message);
-      }
-
-      // 2. Create client record linked to user
-      const { error: clientError } = await supabase
-        .from('clients')
-        .insert({
-          user_id: user.id,
           date_of_birth: formData.dateOfBirth || null,
           gender: formData.gender || null,
           address_line1: formData.address || null,
@@ -76,10 +60,13 @@ export default function NewClientPage() {
           emergency_contact_phone: formData.emergencyContactPhone || null,
           referral_source: formData.referralSource || null,
           internal_notes: formData.notes || null,
-        });
+        }),
+      });
 
-      if (clientError) {
-        throw new Error(clientError.message);
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to create client');
       }
 
       router.push('/admin/clients');

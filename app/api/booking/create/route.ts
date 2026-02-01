@@ -118,7 +118,30 @@ export async function POST(request: NextRequest) {
     const endDateTime = new Date(startDateTime);
     endDateTime.setMinutes(endDateTime.getMinutes() + (service.duration_minutes || 30));
 
-    // 4. Create appointment
+    // 4. CHECK FOR DOUBLE BOOKING - Critical safety check
+    const { data: existingAppointments, error: conflictError } = await supabase
+      .from('appointments')
+      .select('id, starts_at, ends_at')
+      .eq('provider_id', providerId)
+      .neq('status', 'cancelled')
+      .neq('status', 'no_show')
+      .or(`and(starts_at.lt.${endDateTime.toISOString()},ends_at.gt.${startDateTime.toISOString()})`);
+
+    if (conflictError) {
+      console.error('Error checking conflicts:', conflictError);
+      // Continue with booking if conflict check fails - better to book than block
+    } else if (existingAppointments && existingAppointments.length > 0) {
+      return NextResponse.json(
+        { 
+          error: 'This time slot is no longer available. Please select a different time.',
+          conflictType: 'double_booking',
+          suggestRefresh: true
+        },
+        { status: 409 }
+      );
+    }
+
+    // 5. Create appointment
     const { data: appointment, error: appointmentError } = await supabase
       .from('appointments')
       .insert({

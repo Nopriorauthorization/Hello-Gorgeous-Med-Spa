@@ -71,7 +71,22 @@ export async function POST(request: NextRequest) {
   try {
     const supabase = createServerSupabaseClient();
     const body = await request.json();
-    const email = body.email?.toLowerCase()?.trim();
+    
+    // Support both camelCase and snake_case field names
+    const firstName = body.first_name || body.firstName;
+    const lastName = body.last_name || body.lastName;
+    const email = (body.email || '')?.toLowerCase()?.trim();
+    const phone = body.phone;
+    const dateOfBirth = body.date_of_birth || body.dateOfBirth;
+    const gender = body.gender;
+    const addressLine1 = body.address_line1 || body.address;
+    const city = body.city;
+    const state = body.state;
+    const postalCode = body.postal_code || body.zip;
+    const emergencyContactName = body.emergency_contact_name || body.emergencyContactName;
+    const emergencyContactPhone = body.emergency_contact_phone || body.emergencyContactPhone;
+    const referralSource = body.referral_source || body.referralSource;
+    const internalNotes = body.internal_notes || body.notes;
 
     // Check if user with this email already exists
     if (email) {
@@ -101,9 +116,16 @@ export async function POST(request: NextRequest) {
           .from('clients')
           .insert({
             user_id: existingUser.id,
-            date_of_birth: body.dateOfBirth || null,
-            gender: body.gender || null,
-            referral_source: body.referralSource || null,
+            date_of_birth: dateOfBirth || null,
+            gender: gender || null,
+            address_line1: addressLine1 || null,
+            city: city || null,
+            state: state || null,
+            postal_code: postalCode || null,
+            emergency_contact_name: emergencyContactName || null,
+            emergency_contact_phone: emergencyContactPhone || null,
+            referral_source: referralSource || null,
+            internal_notes: internalNotes || null,
           })
           .select()
           .single();
@@ -120,10 +142,10 @@ export async function POST(request: NextRequest) {
     const { data: user, error: userError } = await supabase
       .from('users')
       .insert({
-        first_name: body.firstName,
-        last_name: body.lastName,
+        first_name: firstName,
+        last_name: lastName,
         email: email,
-        phone: body.phone,
+        phone: phone,
         role: 'client',
       })
       .select('id')
@@ -139,14 +161,21 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: userError.message }, { status: 500 });
     }
 
-    // Create client record
+    // Create client record with all fields
     const { data: client, error: clientError } = await supabase
       .from('clients')
       .insert({
         user_id: user.id,
-        date_of_birth: body.dateOfBirth || null,
-        gender: body.gender || null,
-        referral_source: body.referralSource || null,
+        date_of_birth: dateOfBirth || null,
+        gender: gender || null,
+        address_line1: addressLine1 || null,
+        city: city || null,
+        state: state || null,
+        postal_code: postalCode || null,
+        emergency_contact_name: emergencyContactName || null,
+        emergency_contact_phone: emergencyContactPhone || null,
+        referral_source: referralSource || null,
+        internal_notes: internalNotes || null,
       })
       .select()
       .single();
@@ -155,8 +184,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: clientError.message }, { status: 500 });
     }
 
-    return NextResponse.json({ client, user });
+    return NextResponse.json({ client, user, success: true });
   } catch (error) {
+    console.error('Create client error:', error);
     return NextResponse.json({ error: 'Failed to create client' }, { status: 500 });
   }
 }
