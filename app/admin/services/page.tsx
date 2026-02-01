@@ -7,7 +7,6 @@
 // ============================================================
 
 import { useState, useEffect, useMemo } from 'react';
-import { supabase } from '@/lib/supabase/client';
 
 // Skeleton component
 function Skeleton({ className = '' }: { className?: string }) {
